@@ -1,0 +1,34 @@
+{
+  "name": "@infigo-official/types-for-pricingscript",
+  "version": "1.0.0",
+  "description": "Type definitions for Pricing Script Scripting",
+  "types": "v1/index.d.ts",
+  "devDependencies": {
+    "typedoc": "^0.26.6",
+    "typescript": "^5.5.4"
+  },
+  "scripts": {
+    "docs": "npx typedoc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Infigo-Official/types-for-pricingscript.git"
+  },
+  "keywords": [
+    "typedefinitions",
+    "pricingscript",
+    "infigo"
+  ],
+  "author": "Infigo",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Infigo-Official/types-for-pricingscript/issues"
+  },
+  "homepage": "https://github.com/Infigo-Official/types-for-pricingscript#readme",
+  "files": [
+    "v1",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ]
+}
