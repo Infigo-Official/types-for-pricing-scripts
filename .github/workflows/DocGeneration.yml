@@ -1,0 +1,49 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Doc Generation
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pages: write
+      packages: write
+
+    steps:
+
+      - uses: actions/checkout@v3
+      - name: Build Docs and Deploy package
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+      - run: npm install
+      - run: npm run docs
+      - uses: actions/upload-pages-artifact@v2
+        with:
+          path: "docs"
+      - uses: actions/deploy-pages@v2
+      - run: npm ci
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN  }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@Infigo-Official'
+      - run: npm ci
+      - run: echo @infigo-official:registry=https://npm.pkg.github.com >> .npmrc
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token  }}
