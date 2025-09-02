@@ -357,6 +357,47 @@ declare interface Item {
 }
 
 /**
- * Global Item object
+ * Global Item object available in pricing scripts
+ * This constant provides access to all item-related data and functionality,
+ * allowing scripts to retrieve product information, pricing data, attributes,
+ * and perform various operations on the current item being priced.
+ * 
+ * The Item object contains comprehensive information about the product variant
+ * including pricing details, attributes, customer information, file attachments,
+ * and methods for data manipulation and file handling.
+ * 
+ * @example
+ * // Access basic product information
+ * var productName = Item.ProductName;
+ * var basePrice = Item.Price;
+ * var quantity = Item.Quantity;
+ * 
+ * // Work with attributes
+ * for (var i = 0; i < Item.Attributes.length; i++) {
+ *     var attr = Item.Attributes[i];
+ *     debug("Attribute: " + attr.Key + " = " + attr.Value);
+ * }
+ * 
+ * // Get file information
+ * var fileInfo = Item.getFileInfo("fileAttributeId", true);
+ * if (fileInfo.NumberOfPages > 0) {
+ *     debug("File has " + fileInfo.NumberOfPages + " pages");
+ * }
+ * 
+ * // Access customer information
+ * if (Item.CustomerRoles.indexOf("VIP") >= 0) {
+ *     // Apply VIP pricing logic
+ * }
+ * 
+ * // Work with pricing tiers
+ * var tier = HelperMethods.FindTier(Item.Quantity, Item.PricingTiers, Item.CustomerRoles);
+ * if (tier) {
+ *     debug("Using tier: " + tier.Quantity + " @ $" + tier.Price);
+ * }
+ * 
+ * // Calculate final price
+ * var finalPrice = Item.Price;
+ * finalPrice += HelperMethods.GetAttributePriceAdjustment(Item.Quantity, Item.CustomerRoles);
+ * return finalPrice;
  */
 declare const Item: Item; 
