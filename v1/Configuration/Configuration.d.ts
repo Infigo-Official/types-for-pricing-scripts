@@ -7,7 +7,7 @@
  * - Custom configuration data
  * - System-wide settings
  * 
- * @module System / Configuration
+ * @module Configuration
  */
 
 /**
@@ -45,4 +45,6 @@ declare interface ConfigurationInterface {
  * var scriptConfig = Configuration.ScriptConfig;
  * var customSetting = scriptConfig.customParameter;
  */
-declare const Configuration: ConfigurationInterface; 
+declare const Configuration: ConfigurationInterface;
+
+

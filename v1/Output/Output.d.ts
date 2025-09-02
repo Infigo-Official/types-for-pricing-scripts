@@ -8,7 +8,7 @@
  * - Error messages for calculation failures
  * - Console logging for debugging purposes
  * 
- * @module System / Output
+ * @module Output
  */
 
 /**
@@ -68,14 +68,14 @@ declare function error(message: string): void;
  * Console messages are used for debugging purposes and are typically
  * only visible to developers in the browser's developer tools.
  * 
+ * Note: In the actual Infigo pricing script environment, this function is called `console()`.
+ * The TypeScript declaration uses `consoleLog()` to avoid conflicts with the built-in console object.
+ * 
  * @param message - The message to log to the console
  * 
  * @example
- * consoleLog("Script execution started");
- * consoleLog("Final calculated price: $" + finalPrice);
+ * // In actual pricing scripts, use: console("Script execution started");
+ * console("Script execution started");
+ * console("Final calculated price: $" + finalPrice);
  */
 declare function consoleLog(message: string): void;
-
-
-
- 
