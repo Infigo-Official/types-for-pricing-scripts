@@ -1,135 +1,140 @@
 # Pricing Script Interface Documentation
 
-Documentation for the entire Pricing Script engine. Type declarations can be found in the [NPM package](https://www.npmjs.com/package/@infigo-official/types-for-pricingscript) and can be used for your TypeScript and JavaScript projects to get full IntelliSense support.
+Documentation for the entire Pricing Script engine. Type declarations can be found in the [NPM package](https://www.npmjs.com/package/@infigo-official/types-for-pricing-script) and can be used for your TypeScript and JavaScript projects to get full IntelliSense support.
 
 ## Pricing Script Components
 
-### Core Objects
+### Item Management
+
+The item management system provides access to all product-related data and functionality needed for pricing calculations. This includes the main product item, its attributes, pricing tiers, and versioning information.
 
 - **Item**: The main object representing the product variant being priced, containing all product information, attributes, pricing data, and methods for file handling and attribute management.
-- **Configuration**: Provides access to script configuration settings and parameters.
-- **Customer**: Contains customer information including email, roles, department, and discount codes.
-
-### Attribute Management
-
 - **Attribute**: Represents product attributes with their values, price adjustments, weight adjustments, and dimensional adjustments.
-- **AttributeValue**: Individual values within attributes, including tier-based pricing adjustments.
+- **AttributeValue**: Individual values within attributes, including tier-based pricing adjustments that can vary based on quantity or customer roles.
+- **Tier**: Quantity-based pricing tiers with customer role support, allowing different pricing for different customer types.
+- **Version**: Job versioning information including quantities and custom names, useful for tracking pricing changes across job iterations.
 
 ### File Handling
 
+The file handling system provides comprehensive information about uploaded files, allowing scripts to make pricing decisions based on file characteristics.
+
 - **FileInfo**: Comprehensive file information including MIME type, size, page count, dimensions, and content for various file types.
-- **PageSize**: Page dimension information for multi-page documents.
+- **PageSize**: Page dimension information for multi-page documents, useful for calculating costs based on document complexity.
 
-### Pricing and Tiers
+### System Configuration
 
-- **Tier**: Quantity-based pricing tiers with customer role support.
-- **Version**: Job versioning information including quantities and custom names.
+The system configuration provides access to script settings, parameters, and output functions that control behavior and functionality.
+
+- **Configuration**: Provides access to script configuration settings and parameters that control the behavior of the pricing script.
+- **Output Functions**: Allow scripts to communicate with users and provide feedback about pricing calculations and decisions.
 
 ### Helper Methods
+
+Helper methods provide utility functions for common pricing calculations and data manipulation tasks, making it easier to write complex pricing logic.
 
 - **HelperMethods**: Utility functions for common pricing calculations and data manipulation:
   - **FindTier**: Find appropriate pricing tier based on quantity and customer roles
   - **GetAttributePriceAdjustment**: Calculate attribute price adjustments including tier-based adjustments
-  - **InterpolatePrice**: Interpolate prices between tier boundaries
-  - **CSV**: Parse and stringify CSV data with configurable options
-  - **LogObject**: Log object properties for debugging
-  - **Contains**: Check if arrays contain specific values
-  - **IsObject/IsArray**: Type checking utilities
-  - **MergeObject**: Deep merge objects with conflict resolution
+  - **InterpolatePrice**: Interpolate prices between tier boundaries for smooth pricing transitions
+  - **CSV**: Parse and stringify CSV data with configurable options for data-driven pricing
+  - **LogObject**: Log object properties for debugging complex pricing scenarios
+  - **Contains**: Check if arrays contain specific values for conditional logic
+  - **IsObject/IsArray**: Type checking utilities for robust script development
+  - **MergeObject**: Deep merge objects with conflict resolution for combining pricing data
 
-### Output Functions
 
-- **debug()**: Output debug messages to the user interface
-- **alert()**: Display alert messages to the user
-- **warning()**: Show warning messages
-- **error()**: Display error messages
-- **console()**: Log messages to browser console
 
-### Constants
+## Scripting Principles
 
-- **Constants.MessageArea**: Predefined message area constants for script output targeting.
+### Object Access and Data Flow
 
-## Usage Examples
+When working with pricing script objects, all data is read-only and accessed through the provided interfaces. The script receives the current state of the pricing context and returns the calculated price or pricing adjustments.
 
-### Basic Pricing Script
+Updates to the pricing system are handled through the return value of the script, which can include price modifications, attribute adjustments, and other pricing-related changes.
 
-```javascript
-// Simple price calculation
-var basePrice = Item.Price * 1.5;
-return basePrice;
-```
+### Events and Triggers
 
-### Attribute-Based Pricing
+Pricing scripts are triggered by various events in the pricing system:
+- Product selection or configuration changes
+- Attribute value modifications
+- Quantity updates
+- File uploads or modifications
 
-```javascript
-// Add price adjustments for each selected attribute
-var finalPrice = Item.Price;
-for(var i = 0; i < Item.Attributes.length; ++i) {
-    var attr = Item.Attributes[i];
-    if(attr.Value) {
-        finalPrice += attr.PriceAdjustment;
-    }
-}
-return finalPrice;
-```
+The script can react to these events by recalculating prices, adjusting attributes, or providing user feedback.
+
+### Data Persistence
+
+Pricing scripts can store and retrieve data in various ways:
+- Temporary data during the current pricing session
+- Persistent data associated with the current job
+- Configuration data that affects pricing behavior
+- Cached calculations for performance optimization
+
+## Supported File Types
+
+### Media Files
+
+The pricing script system supports various file types for file-based pricing calculations:
+
+- **PDF**: Supports page count, dimensions, and content analysis for document-based pricing
+- **JPEG**: Image files with size and dimension information
+- **PNG**: Image files with transparency support and size information
+- **GIF**: Animated or static images with size and frame count data
+- **BMP**: Basic bitmap images with size information
+- **TIFF**: High-quality images with size and compression data
+
+### Document Properties
+
+For document-based pricing, the system provides access to:
+- Page count and dimensions
+- File size and compression information
+- Content type and format details
+- Metadata and properties
+
+## Pricing Calculation Methods
+
+### Basic Pricing
+
+Simple pricing calculations can be performed using basic arithmetic operations on the Item.Price property and attribute adjustments.
 
 ### Tier-Based Pricing
 
-```javascript
-// Use helper method to find appropriate tier
-var tier = HelperMethods.FindTier(Item.Quantity, Item.PricingTiers, Item.CustomerRoles);
-if(tier) {
-    return tier.Price;
-}
-return Item.Price;
-```
+Complex pricing models can be implemented using the tier system, which supports:
+- Quantity-based discounts
+- Customer role-specific pricing
+- Interpolation between tier boundaries
+- Minimum and maximum quantity constraints
+
+### Attribute-Based Pricing
+
+Dynamic pricing can be calculated based on selected attributes:
+- Price adjustments for each selected option
+- Weight modifications for shipping calculations
+- Dimensional changes for packaging costs
+- Conditional pricing based on attribute combinations
 
 ### File-Based Pricing
 
-```javascript
-// Get file information and adjust price based on file size
-var fileInfo = Item.getFileInfo("document", false);
-if(fileInfo.Size > 1024 * 1024) { // > 1MB
-    return Item.Price * 1.2; // 20% markup for large files
-}
-return Item.Price;
-```
+File characteristics can influence pricing decisions:
+- Size-based pricing for storage or processing costs
+- Page count pricing for printing or processing
+- Format-specific pricing for different file types
+- Complexity-based pricing for processing requirements
 
-### CSV Data Processing
+## Error Handling and Validation
 
-```javascript
-// Parse CSV data and use it for pricing
-var csvData = HelperMethods.CSV.parse(csvContent);
-var rowCount = csvData.length;
-return Item.Price + (rowCount * 0.01); // Add 1 cent per row
-```
+### Input Validation
 
-## Key Features
+Pricing scripts should validate their inputs and handle edge cases:
+- Check for required data availability
+- Validate numeric values and ranges
+- Handle missing or invalid attributes
+- Provide meaningful error messages
 
-- **Type Safety**: Full TypeScript support with comprehensive type definitions
-- **IntelliSense**: Complete autocomplete and parameter hints in modern IDEs
-- **Documentation**: Detailed JSDoc comments for all properties and methods
-- **Compatibility**: Works with both TypeScript and JavaScript projects
-- **Extensibility**: Easy to extend with custom type definitions
+### Error Recovery
 
-## Installation
-
-```bash
-# Install as development dependency (recommended for development)
-npm install --save-dev @infigo-official/types-for-pricingscript
-
-# Install as production dependency (if building applications)
-npm install @infigo-official/types-for-pricingscript
-```
-
-## Getting Started
-
-1. Install the package in your project
-2. Import the types in your TypeScript files
-3. Start writing pricing scripts with full IntelliSense support
-4. Use the helper methods for common pricing calculations
-5. Leverage the comprehensive attribute and file handling capabilities
-
-## Support
-
-For issues, questions, or contributions, please visit our [GitHub repository](https://github.com/Infigo-Official/types-for-pricingscript). 
+Robust pricing scripts should include error recovery mechanisms:
+- Fallback pricing when calculations fail
+- Default values for missing data
+- Graceful degradation of functionality
+- User-friendly error reporting 

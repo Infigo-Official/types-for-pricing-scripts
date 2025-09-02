@@ -2,7 +2,7 @@
 
 Type definitions for the Pricing Script scripting interface.
 
-Full documentation is available [here](https://infigo-official.github.io/types-for-pricingscript/).
+Full documentation is available [here](https://infigo-official.github.io/types-for-pricing-script/).
 
 Use and install the package to get the best experience and IntelliSense support within our IDE.
 Choose dev dependencies if you are developing in Javascript or our code will not be reused in another project.
@@ -11,10 +11,10 @@ Choose dev dependencies if you are developing in Javascript or our code will not
 npm init
 
 # install as dev dependencies
-npm i -D @infigo-official/types-for-pricingscript
+npm i -D @infigo-official/types-for-pricing-script
 
 # ... or ...
 
 # install as dependencies
-npm i @infigo-official/types-for-pricingscript
+npm i @infigo-official/types-for-pricing-script
 ``` 
