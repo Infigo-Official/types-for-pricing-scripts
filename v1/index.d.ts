@@ -5,6 +5,6 @@
 /// <reference path="File/FileInfo.d.ts" />
 /// <reference path="Configuration/Configuration.d.ts" />
 /// <reference path="Output/Output.d.ts" />
-/// <reference path="Helpers/index.d.ts" />
+/// <reference path="Helpers/Helpers.d.ts" />
 /// <reference path="SessionItem/Session.d.ts" />
 /// <reference path="CheckoutItem/CheckoutItem.d.ts" />
