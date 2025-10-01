@@ -67,7 +67,7 @@ declare interface Item {
      * 
      * @example
      * var finalTotal = Item.FinalPrice;
-     * debug("Final price for " + Item.Quantity + " units: $" + finalTotal);
+     * console("Final price for " + Item.Quantity + " units: $" + finalTotal);
      */
     FinalPrice: number;
 
@@ -478,13 +478,13 @@ declare interface Item {
  * // Work with attributes
  * for (var i = 0; i < Item.Attributes.length; i++) {
  *     var attr = Item.Attributes[i];
- *     debug("Attribute: " + attr.Key + " = " + attr.Value);
+ *     console("Attribute: " + attr.Key + " = " + attr.Value);
  * }
  * 
  * // Get file information
  * var fileInfo = Item.getFileInfo("fileAttributeId", true);
  * if (fileInfo.NumberOfPages > 0) {
- *     debug("File has " + fileInfo.NumberOfPages + " pages");
+ *     console("File has " + fileInfo.NumberOfPages + " pages");
  * }
  * 
  * // Access customer information
@@ -495,7 +495,7 @@ declare interface Item {
  * // Work with pricing tiers
  * var tier = HelperMethods.FindTier(Item.Quantity, Item.PricingTiers, Item.CustomerRoles);
  * if (tier) {
- *     debug("Using tier: " + tier.Quantity + " @ $" + tier.Price);
+ *     console("Using tier: " + tier.Quantity + " @ $" + tier.Price);
  * }
  * 
  * // Calculate final price
@@ -509,33 +509,33 @@ declare interface Item {
  *     // Apply quantity-based discounts
  *     if (Item.Quantity >= 100) {
  *         finalPrice *= 0.9; // 10% bulk discount
- *         debug("Applied bulk discount: 10%");
+ *         console("Applied bulk discount: 10%");
  *     }
  *     
  *     // Check for special customer pricing
  *     if (Item.CustomerRoles.indexOf("Wholesale") >= 0) {
  *         finalPrice *= 0.85; // 15% wholesale discount
- *         debug("Applied wholesale pricing");
+ *         console("Applied wholesale pricing");
  *     }
  *
  *     // Apply attribute-based adjustments
  *     var colorAttr = Item.getAttributeValue("Color");
  *     if (colorAttr === "Premium Gold") {
  *         finalPrice += 25.00; // Premium color surcharge
- *         debug("Added premium color surcharge: $25.00");
+ *         console("Added premium color surcharge: $25.00");
  *     }
  *     
  *     // File processing fees based on page count
  *     if (Item.NumberOfPages > 0) {
  *         var processingFee = Item.NumberOfPages * 0.50;
  *         finalPrice += processingFee;
- *         debug("Added processing fee: $" + processingFee + " for " + Item.NumberOfPages + " pages");
+ *         console("Added processing fee: $" + processingFee + " for " + Item.NumberOfPages + " pages");
  *     }
  *     
  *     // Setup cost for batch jobs
  *     if (Item.IsBatch && Item.Quantity > 1) {
  *         finalPrice += 15.00; // One-time setup fee
- *         debug("Added batch setup fee: $15.00");
+ *         console("Added batch setup fee: $15.00");
  *     }
  *     
  * } catch (error) {
@@ -548,12 +548,12 @@ declare interface Item {
  * if (Item.Versions && Item.Versions.length > 0) {
  *     for (var v = 0; v < Item.Versions.length; v++) {
  *         var version = Item.Versions[v];
- *         debug("Version " + (v + 1) + ": " + version.Data.length + " data entries");
+ *         console("Version " + (v + 1) + ": " + version.Data.length + " data entries");
  *         
  *         // Process version-specific data
  *         for (var d = 0; d < version.Data.length; d++) {
  *             var data = version.Data[d];
- *             debug("  Data entry: " + data.Key + " = " + data.Value);
+ *             console("  Data entry: " + data.Key + " = " + data.Value);
  *         }
  *     }
  * }
@@ -564,7 +564,7 @@ declare interface Item {
  * function getCsvBasedPrice() {
  *     var csvData = Item.getGlobalFileCsvContent("pricing.csv");
  *     if (!csvData || csvData.length < 2) {
- *         debug("CSV file not found or empty");
+ *         console("CSV file not found or empty");
  *         return Item.Price;
  *     }
  *     
@@ -580,7 +580,7 @@ declare interface Item {
  *     }
  *     
  *     if (priceColumnIndex === -1) {
- *         debug("Price column not found in CSV");
+ *         console("Price column not found in CSV");
  *         return Item.Price;
  *     }
  *     
@@ -603,12 +603,12 @@ declare interface Item {
  *         
  *         if (isMatch) {
  *             var price = parseFloat(csvData[row][priceColumnIndex]) || Item.Price;
- *             debug("Found matching price: $" + price);
+ *             console("Found matching price: $" + price);
  *             return price;
  *         }
  *     }
  *     
- *     debug("No matching row found, using default price");
+ *     console("No matching row found, using default price");
  *     return Item.Price;
  * }
  * 
@@ -623,13 +623,290 @@ declare interface Item {
  *     var setupCostPerUnit = setupCost / quantity;
  *     var finalPrice = basePrice + setupCostPerUnit;
  *     
- *     debug("Base price: $" + basePrice);
- *     debug("Setup cost: $" + setupCost + " ($" + setupCostPerUnit + " per unit)");
- *     debug("Final price: $" + finalPrice);
+ *     console("Base price: $" + basePrice);
+ *     console("Setup cost: $" + setupCost + " ($" + setupCostPerUnit + " per unit)");
+ *     console("Final price: $" + finalPrice);
  *     
  *     return finalPrice;
  * }
  * 
  * return finalPrice;
+ * 
+ * @example
+ * // Comprehensive pricing script example showcasing most Item functionality
+ * // This example demonstrates CSV-based pricing with attribute matching, 
+ * // tier pricing, file processing, configuration, and output functions
+ * function comprehensivePricingScript() {
+ *     try {
+ *         // 1. Configuration and Setup
+ *         var config = Configuration.ScriptConfig();
+ *         var defaultConfig = {
+ *             filePath: "pricing.csv",
+ *             priceColumnName: "Price",
+ *             setupCostColumnName: "Setup",
+ *             skuColumnName: "SKU",
+ *             debugMode: false,
+ *             baseFileName: "standup",
+ *             separator: "-",
+ *             splitMapping: ["Size", "Material"]
+ *         };
+ *         
+ *         // Merge configuration using HelperMethods
+ *         HelperMethods.MergeObject(defaultConfig, config);
+ *         
+ *         console("Starting comprehensive pricing calculation for: " + Item.ProductName);
+ *         console("Item SKU: " + Item.Sku + ", Actual SKU: " + Item.ActualSku);
+ *         console("Base Price: $" + Item.Price + ", Quantity: " + Item.Quantity);
+ *         
+ *         // 2. Customer and Role Information
+ *         console("Customer: " + Item.Email);
+ *         console("Department: " + Item.Department);
+ *         console("Customer Roles: " + Item.CustomerRoles.join(", "));
+ *         
+ *         // Check for guest users
+ *         if (Item.CustomerRoles.length === 1 && Item.CustomerRoles[0] === "Guests") {
+ *             console("Guest user detected - returning zero price");
+ *             return 0;
+ *         }
+ *         
+ *         // 3. Product Information and Categories
+ *         console("Product Categories: " + Item.Categories.join(", "));
+ *         console("Product Tags: " + Item.Tags.join(", "));
+ *         console("Dimensions: " + Item.Width + "x" + Item.Height + "x" + Item.Length);
+ *         console("Weight: " + Item.Weight + " (Can set weight: " + Item.CanSetWeight + ")");
+ *         
+ *         // 4. Batch and Version Information
+ *         if (Item.IsBatch) {
+ *             console("Batch job with " + Item.NumberOfRecords + " records");
+ *         }
+ *         
+ *         if (Item.Versions && Item.Versions.length > 0) {
+ *             console("Product has " + Item.NumberOfVersions + " versions");
+ *             console("Total versions quantity: " + Item.VersionsSumQuantity);
+ *             
+ *             for (var v = 0; v < Item.Versions.length; v++) {
+ *                 var version = Item.Versions[v];
+ *                 console("Version " + (v + 1) + ": JobId=" + version.JobId + 
+ *                       ", Name=" + version.CustomName + ", Qty=" + version.Quantity);
+ *             }
+ *         }
+ *         
+ *         // 5. File Processing
+ *         var finalPrice = Item.UnitPrice; // Start with calculated unit price
+ *         
+ *         // Check for file uploads and calculate processing fees
+ *         if (Item.NumberOfPages > 0) {
+ *             var processingFee = Item.NumberOfPages * 0.25;
+ *             finalPrice += processingFee;
+ *             console("Added file processing fee: $" + processingFee + " for " + Item.NumberOfPages + " pages");
+ *         }
+ *         
+ *         // 6. CSV File Loading and Processing
+ *         var csvFileName = defaultConfig.filePath;
+ *         
+ *         // Dynamic filename generation if no static path provided
+ *         if (!csvFileName) {
+ *             csvFileName = defaultConfig.baseFileName;
+ *             for (var i = 0; i < defaultConfig.splitMapping.length; i++) {
+ *                 var attrValue = Item.getAttributeValue(defaultConfig.splitMapping[i]);
+ *                 if (attrValue) {
+ *                     csvFileName += defaultConfig.separator + attrValue;
+ *                 }
+ *             }
+ *             csvFileName += ".csv";
+ *         }
+ *         
+ *         console("Loading CSV file: " + csvFileName);
+ *         var csvData = Item.getGlobalFileCsvContent(csvFileName);
+ *         
+ *         if (csvData && csvData.length > 1) {
+ *             console("CSV loaded successfully with " + csvData.length + " rows");
+ *             
+ *             // Find matching row based on attributes
+ *             var headers = csvData[0];
+ *             var priceColumnIndex = -1;
+ *             var setupColumnIndex = -1;
+ *             
+ *             // Find column indices
+ *             for (var h = 0; h < headers.length; h++) {
+ *                 if (headers[h] === defaultConfig.priceColumnName) {
+ *                     priceColumnIndex = h;
+ *                 } else if (headers[h] === defaultConfig.setupCostColumnName) {
+ *                     setupColumnIndex = h;
+ *                 }
+ *             }
+ *             
+ *             // Find matching row
+ *             for (var row = 1; row < csvData.length; row++) {
+ *                 var isMatch = true;
+ *                 
+ *                 // Check SKU match if SKU column exists
+ *                 if (defaultConfig.skuColumnName) {
+ *                     var skuColumnIndex = headers.indexOf(defaultConfig.skuColumnName);
+ *                     if (skuColumnIndex >= 0) {
+ *                         var csvSku = csvData[row][skuColumnIndex];
+ *                         if (csvSku && csvSku !== Item.ActualSku) {
+ *                             isMatch = false;
+ *                             continue;
+ *                         }
+ *                     }
+ *                 }
+ *                 
+ *                 // Check attribute matches
+ *                 for (var col = 0; col < headers.length; col++) {
+ *                     var columnName = headers[col];
+ *                     if (columnName !== defaultConfig.priceColumnName && 
+ *                         columnName !== defaultConfig.setupCostColumnName &&
+ *                         columnName !== defaultConfig.skuColumnName) {
+ *                         
+ *                         var csvValue = csvData[row][col];
+ *                         var attrValue = Item.getAttributeValue(columnName);
+ *                         
+ *                         if (csvValue && csvValue !== attrValue) {
+ *                             isMatch = false;
+ *                             break;
+ *                         }
+ *                     }
+ *                 }
+ *                 
+ *                 if (isMatch && priceColumnIndex >= 0) {
+ *                     var csvPrice = parseFloat(csvData[row][priceColumnIndex]);
+ *                     if (!isNaN(csvPrice)) {
+ *                         finalPrice = csvPrice;
+ *                         console("Found matching CSV price: $" + csvPrice);
+ *                         
+ *                         // Add setup cost if applicable
+ *                         if (setupColumnIndex >= 0) {
+ *                             var setupCost = parseFloat(csvData[row][setupColumnIndex]);
+ *                             if (!isNaN(setupCost) && setupCost > 0) {
+ *                                 var setupCostPerUnit = setupCost / Item.Quantity;
+ *                                 finalPrice += setupCostPerUnit;
+ *                                 console("Added setup cost: $" + setupCost + " ($" + setupCostPerUnit + " per unit)");
+ *                             }
+ *                         }
+ *                     }
+ *                     break;
+ *                 }
+ *             }
+ *         } else {
+ *             console("CSV file not found or empty: " + csvFileName);
+ *         }
+ *         
+ *         // 7. Attribute Processing and Price Adjustments
+ *         console("Processing " + Item.Attributes.length + " attributes");
+ *         var totalAttributeAdjustment = 0;
+ *         
+ *         for (var i = 0; i < Item.Attributes.length; i++) {
+ *             var attr = Item.Attributes[i];
+ *             console("Attribute: " + attr.Key + " = " + attr.Value + 
+ *                   " (Required: " + attr.IsRequired + ", Adjustment: $" + attr.PriceAdjustment + ")");
+ *             
+ *             // Apply attribute price adjustments
+ *             if (attr.PriceAdjustment && attr.PriceAdjustment !== 0) {
+ *                 totalAttributeAdjustment += attr.PriceAdjustment;
+ *             }
+ *             
+ *             // Special handling for premium attributes
+ *             if (attr.Key === "Material" && attr.Value === "Premium") {
+ *                 var premiumSurcharge = 15.00;
+ *                 totalAttributeAdjustment += premiumSurcharge;
+ *                 console("Applied premium material surcharge: $" + premiumSurcharge);
+ *             }
+ *         }
+ *         
+ *         finalPrice += totalAttributeAdjustment;
+ *         console("Total attribute adjustments: $" + totalAttributeAdjustment);
+ *         
+ *         // 8. Tier Pricing with Cart Consolidation
+ *         var totalQuantity = Item.Quantity;
+ *         
+ *         // Check other cart items for quantity consolidation
+ *         if (Item.CartItems && Item.CartItems.length > 0) {
+ *             console("Checking " + Item.CartItems.length + " cart items for consolidation");
+ *             
+ *             for (var c = 0; c < Item.CartItems.length; c++) {
+ *                 var cartItem = Item.CartItems[c];
+ *                 if (cartItem.ProductName === Item.ProductName && c !== Item.CartItemIndex) {
+ *                     totalQuantity += cartItem.Quantity;
+ *                     console("Added quantity from matching cart item: " + cartItem.Quantity);
+ *                 }
+ *             }
+ *         }
+ *         
+ *         console("Total consolidated quantity: " + totalQuantity);
+ *         
+ *         // Apply tier pricing
+ *         var tier = HelperMethods.FindTier(totalQuantity, Item.PricingTiers, Item.CustomerRoles);
+ *         if (tier) {
+ *             finalPrice = tier.Price + totalAttributeAdjustment;
+ *             console("Applied tier pricing: " + tier.Quantity + " units @ $" + tier.Price);
+ *         }
+ *         
+ *         // 9. Special Pricing and Discounts
+ *         if (Item.SpecialPrice && Item.SpecialPriceStartDate && Item.SpecialPriceEndDate) {
+ *             var now = new Date();
+ *             if (now >= Item.SpecialPriceStartDate && now <= Item.SpecialPriceEndDate) {
+ *                 finalPrice = Item.SpecialPrice + totalAttributeAdjustment;
+ *                 console("Applied special pricing: $" + Item.SpecialPrice);
+ *             }
+ *         }
+ *         
+ *         // 10. Role-based Discounts
+ *         if (Item.CustomerRoles.indexOf("Wholesale") >= 0) {
+ *             finalPrice *= 0.85; // 15% wholesale discount
+ *             console("Applied wholesale discount: 15%");
+ *         } else if (Item.CustomerRoles.indexOf("Premium") >= 0) {
+ *             finalPrice *= 0.90; // 10% premium customer discount
+ *             console("Applied premium customer discount: 10%");
+ *         }
+ *         
+ *         // 11. Category and Tag-based Adjustments
+ *         if (Item.Categories.indexOf("Urgent") >= 0) {
+ *             finalPrice *= 1.25; // 25% rush charge
+ *             console("Applied rush charge for Urgent category: 25%");
+ *         }
+ *         
+ *         if (Item.Tags.indexOf("Featured") >= 0) {
+ *             finalPrice *= 1.05; // 5% featured product markup
+ *             console("Applied featured product markup: 5%");
+ *         }
+ *         
+ *         // 12. Minimum Price Validation
+ *         var minimumPrice = Item.ProductCost * 1.1; // 10% margin minimum
+ *         if (finalPrice < minimumPrice) {
+ *             console("Price below minimum margin, adjusting to: $" + minimumPrice);
+ *             finalPrice = minimumPrice;
+ *         }
+ *         
+ *         // 13. Final Price Validation and Output
+ *         if (finalPrice <= 0) {
+ *             console("Invalid final price calculated: $" + finalPrice);
+ *             return Item.Price; // Fallback to base price
+ *         }
+ *         
+ *         // Round to 2 decimal places
+ *         finalPrice = Math.round(finalPrice * 100) / 100;
+ *         
+ *         console("Final calculated price: $" + finalPrice);
+ *         console("Price breakdown:");
+ *         console("- Unit Price: $" + Item.UnitPrice);
+ *         console("- Final Price: $" + Item.FinalPrice);
+ *         console("- Calculated Price: $" + finalPrice);
+ *         
+ *         // Set any dynamic attribute values based on calculation
+ *         Item.setAttributeValue("CalculatedPrice", finalPrice.toString());
+ *         Item.setAttributeValue("PriceCalculationDate", new Date().toISOString());
+ *         
+ *         return finalPrice;
+ *         
+ *     } catch (error) {
+ *         console("Error in comprehensive pricing script: " + error.message);
+ *         console("Stack trace: " + error.stack);
+ *         return Item.Price; // Fallback to base price
+ *     }
+ * }
+ * 
+ * // Execute the comprehensive pricing script
+ * return comprehensivePricingScript();
  */
 declare const Item: Item; 
