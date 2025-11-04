@@ -1,13 +1,11 @@
 /**
- * This module provides access to version management functionality in pricing scripts.
+ * Version management functionality for pricing scripts.
  * The version system supports job versioning information including quantities
  * and custom names, useful for tracking pricing changes across job iterations including:
  * - Individual version information
  * - Version collection management
  * - Quantity tracking across versions
  * - Version status and metadata
- * 
- * @module Item / Version
  */
 
 /**

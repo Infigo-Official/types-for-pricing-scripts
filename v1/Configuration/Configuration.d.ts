@@ -11,6 +11,23 @@
  */
 
 /**
+ * Interface representing the configuration object.
+ */
+interface Configuration {
+    /**
+     * Retrieves the script configuration.
+     * @returns The script configuration object.
+     */
+    ScriptConfig: () => any;
+
+    /**
+     * Retrieves the parameters configuration.
+     * @returns `null` as parameters are not yet supported.
+     */
+    Parameters: () => any | null;
+}
+
+/**
  * Provides access to script configuration settings and parameters.
  * This interface allows pricing scripts to retrieve configuration data
  * that controls their behavior and functionality.
@@ -37,14 +54,24 @@ declare interface ConfigurationInterface {
 }
 
 /**
+ * Represents a Configuration interface.
+ */
+
+/**
  * Global Configuration object available in pricing scripts.
  * This constant provides access to the configuration interface,
  * allowing scripts to retrieve configuration settings and parameters.
  * 
  * @example
- * var scriptConfig = Configuration.ScriptConfig;
- * var customSetting = scriptConfig.customParameter;
+ * var scriptConfig = Configuration.ScriptConfig();
+ * console("Script configuration loaded: " + JSON.stringify(scriptConfig));
+ * 
+ * var markupPercentage = scriptConfig.markupPercentage || 20;
+ * console("Using markup percentage: " + markupPercentage + "%");
+ * 
+ * var parameters = Configuration.Parameters();
+ * console("Parameters available: " + JSON.stringify(parameters));
  */
-declare const Configuration: ConfigurationInterface;
+declare const Configuration: Configuration;
 
 

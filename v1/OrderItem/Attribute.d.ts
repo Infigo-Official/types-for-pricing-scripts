@@ -1,5 +1,5 @@
 /**
- * This module provides access to attribute management functionality in pricing scripts.
+ * Attribute management functionality for pricing scripts.
  * Attributes represent configurable options for products that can affect pricing, weight, and dimensions.
  * The attribute system provides a flexible way to handle complex product configurations including:
  * - Product options and variants
@@ -7,8 +7,6 @@
  * - Weight and dimensional modifications
  * - Tier-based pricing adjustments
  * - Required vs optional attributes
- * 
- * @module Item / Attribute
  */
 
 /**
