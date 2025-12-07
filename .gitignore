@@ -1,3 +1,5 @@
 node_modules/
-docs/
-*.log 
+*.log
+docusaurus-docs/node_modules/
+docusaurus-docs/.docusaurus/
+docusaurus-docs/build/

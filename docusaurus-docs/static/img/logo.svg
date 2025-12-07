@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Calculator body -->
+  <rect x="6" y="3" width="52" height="58" rx="8" fill="#1e1e1e"/>
+
+  <!-- Body shadow -->
+  <rect x="6" y="3" width="52" height="58" rx="8" fill="rgba(255,255,255,0.06)"/>
+
+  <!-- Screen -->
+  <rect x="12" y="8" width="40" height="16" rx="3"
+        fill="#e9f7ef" stroke="#b9e6d0" stroke-width="1"/>
+
+  <!-- Glossy screen effect -->
+  <rect x="12" y="8" width="40" height="8" rx="3"
+        fill="rgba(255,255,255,0.35)"/>
+
+  <!-- Screen text -->
+  <text x="32" y="20" font-family="Inter, Arial, sans-serif"
+        font-size="12" font-weight="600" fill="#1e8a4d"
+        text-anchor="middle">$123</text>
+
+  <!-- Buttons row 1 -->
+  <rect x="14" y="30" width="10" height="9" rx="2" fill="#fafafa" stroke="#ddd"/>
+  <rect x="27" y="30" width="10" height="9" rx="2" fill="#fafafa" stroke="#ddd"/>
+  <rect x="40" y="30" width="10" height="9" rx="2" fill="#fafafa" stroke="#ddd"/>
+
+  <!-- Buttons row 2 -->
+  <rect x="14" y="43" width="10" height="9" rx="2" fill="#fafafa" stroke="#ddd"/>
+  <rect x="27" y="43" width="10" height="9" rx="2" fill="#fafafa" stroke="#ddd"/>
+  <rect x="40" y="43" width="10" height="9" rx="2" fill="#ffd27f" stroke="#e0a84c"/>
+
+  <!-- Button labels -->
+  <text x="19" y="37" font-family="Inter, Arial" font-size="6" fill="#333" text-anchor="middle">7</text>
+  <text x="32" y="37" font-family="Inter, Arial" font-size="6" fill="#333" text-anchor="middle">8</text>
+  <text x="45" y="37" font-family="Inter, Arial" font-size="6" fill="#333" text-anchor="middle">9</text>
+
+  <text x="19" y="50" font-family="Inter, Arial" font-size="6" fill="#333" text-anchor="middle">4</text>
+  <text x="32" y="50" font-family="Inter, Arial" font-size="6" fill="#333" text-anchor="middle">5</text>
+  <text x="45" y="50" font-family="Inter, Arial" font-size="6" fill="#333" text-anchor="middle">=</text>
+</svg>
