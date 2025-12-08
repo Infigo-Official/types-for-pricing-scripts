@@ -7,11 +7,11 @@ Type definitions for the Infigo Pricing Script scripting interface.
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![npm](https://img.shields.io/npm/v/@infigo-official/types-for-pricing-script)
 
+Full documentation is available [here](https://infigo-official.github.io/types-for-pricing-scripts/).
+
 ## Overview
 
 **Types for Pricing Script** provides TypeScript type definitions for the Infigo Pricing Script engine. These definitions enable full IntelliSense support, type checking, and documentation within your IDE when developing pricing scripts.
-
-Full documentation is available at [https://infigo-official.github.io/types-for-pricing-script/](https://infigo-official.github.io/types-for-pricing-script/)
 
 ## Features
 
