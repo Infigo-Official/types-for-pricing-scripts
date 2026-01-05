@@ -4,13 +4,11 @@
   "description": "Type definitions for Pricing Script Scripting",
   "types": "v1/index.d.ts",
   "devDependencies": {
-    "http-server": "^14.1.1",
-    "typedoc": "^0.24.8",
     "typescript": "^4.9.5"
   },
   "scripts": {
-    "docs": "npx typedoc",
-    "start": "npx http-server docs -p 3000 -o"
+    "docs:dev": "cd docusaurus-docs && npm start",
+    "docs:build": "cd docusaurus-docs && npm run build"
   },
   "repository": {
     "type": "git",
