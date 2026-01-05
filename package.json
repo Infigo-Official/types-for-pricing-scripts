@@ -1,6 +1,6 @@
 {
   "name": "@infigo-official/types-for-pricing-script",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Type definitions for Pricing Script Scripting",
   "types": "v1/index.d.ts",
   "devDependencies": {
