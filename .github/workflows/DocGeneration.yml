@@ -6,6 +6,11 @@ name: Doc Generation
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'v1/**'
+      - 'package.json'
+      - 'docusaurus-docs/**'
+      - '.github/workflows/DocGeneration.yml'
 
 jobs:
   build:
@@ -30,9 +35,8 @@ jobs:
       - run: npm run docs
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: "docs"
+          path: "docusaurus-docs/build"
       - uses: actions/deploy-pages@v4
-      - run: npm install
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN  }}
@@ -42,7 +46,6 @@ jobs:
           node-version: '20.x'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@Infigo-Official'
-      - run: npm install
       - run: echo @infigo-official:registry=https://npm.pkg.github.com >> .npmrc
       - run: npm publish --provenance --access public
         env:
