@@ -17,9 +17,11 @@
  * Represents the product variant being priced and provides access to all
  * product information, attributes, pricing data, and methods for file handling
  * and attribute management.
- * 
+ *
  * This object is the primary interface for accessing product data and performing
  * pricing calculations in pricing scripts.
+ *
+ * @category Global Objects
  */
 declare interface Item {
     /**
@@ -130,9 +132,13 @@ declare interface Item {
     /**
      * The weight of the item in the configured weight unit (typically grams or ounces).
      * This value is used for shipping calculations and weight-based pricing.
-     * 
+     *
      * @example
-     * var shippingCost = calculateShippingByWeight(Item.Weight);
+     * // Calculate shipping cost based on weight
+     * var weightInKg = Item.Weight / 1000;
+     * var shippingRate = 2.50; // $2.50 per kg
+     * var shippingCost = weightInKg * shippingRate;
+     * debug("Item weight: " + Item.Weight + "g, Shipping: $" + shippingCost);
      */
     Weight: number;
 
@@ -140,10 +146,12 @@ declare interface Item {
      * Indicates whether the weight can be set or modified for this item.
      * Some products may have fixed weights that cannot be changed,
      * while others allow weight adjustments based on attributes or custom settings.
-     * 
+     *
      * @example
-     * if (Item.CanSetWeight) {
-     *     // Allow weight adjustments in the UI
+     * if (Item.CanSetWeight && Item.Weight > 5000) {
+     *     debug("Heavy item detected - weight: " + Item.Weight + "g");
+     *     // Apply heavy item surcharge
+     *     return Item.Price + 10.00;
      * }
      */
     CanSetWeight: boolean;
@@ -152,9 +160,13 @@ declare interface Item {
      * The Stock Keeping Unit (SKU) of the product variant.
      * This is the unique identifier for the product variant and is used
      * for inventory management and order processing.
-     * 
+     *
      * @example
-     * var productIdentifier = Item.Sku;
+     * // Apply SKU-specific pricing rules
+     * if (Item.Sku.startsWith("PREMIUM-")) {
+     *     debug("Premium product: " + Item.Sku);
+     *     return Item.Price * 1.10; // 10% premium markup
+     * }
      */
     Sku: string;
 
@@ -162,36 +174,52 @@ declare interface Item {
      * The actual SKU based on the current attribute combination.
      * If no attributes are selected, this will be the same as the product SKU.
      * This value reflects the specific configuration of the product being priced.
-     * 
+     *
      * @example
-     * var configuredSku = Item.ActualSku;
+     * // Log the configured SKU for debugging
+     * debug("Base SKU: " + Item.Sku);
+     * debug("Configured SKU: " + Item.ActualSku);
+     * if (Item.ActualSku !== Item.Sku) {
+     *     debug("Product has attribute variations");
+     * }
      */
     ActualSku: string;
 
     /**
      * The width of the item in the configured dimension unit (typically inches or centimeters).
      * This value is used for packaging calculations and dimensional pricing.
-     * 
+     *
      * @example
-     * var packagingCost = calculatePackagingCost(Item.Width, Item.Height, Item.Length);
+     * // Calculate area-based pricing
+     * var area = Item.Width * Item.Height;
+     * var pricePerSquareUnit = 0.05;
+     * var areaCost = area * pricePerSquareUnit;
+     * debug("Area: " + area + " sq units, Cost: $" + areaCost);
      */
     Width: number;
 
     /**
      * The height of the item in the configured dimension unit (typically inches or centimeters).
      * This value is used for packaging calculations and dimensional pricing.
-     * 
+     *
      * @example
-     * var packagingCost = calculatePackagingCost(Item.Width, Item.Height, Item.Length);
+     * // Check if item is oversized
+     * if (Item.Height > 48) {
+     *     debug("Oversized item - adding handling fee");
+     *     return Item.Price + 25.00;
+     * }
      */
     Height: number;
 
     /**
      * The length of the item in the configured dimension unit (typically inches or centimeters).
      * This value is used for packaging calculations and dimensional pricing.
-     * 
+     *
      * @example
-     * var packagingCost = calculatePackagingCost(Item.Width, Item.Height, Item.Length);
+     * // Calculate volume for shipping
+     * var volume = Item.Width * Item.Height * Item.Length;
+     * var volumetricWeight = volume / 5000; // Standard divisor
+     * debug("Volumetric weight: " + volumetricWeight);
      */
     Length: number;
 
@@ -199,9 +227,14 @@ declare interface Item {
      * The name of the product as displayed to customers.
      * This is the human-readable product name used in the user interface
      * and order confirmations.
-     * 
+     *
      * @example
-     * var displayName = Item.ProductName;
+     * debug("Processing order for: " + Item.ProductName);
+     * // Check for special product names
+     * if (Item.ProductName.indexOf("Rush") >= 0) {
+     *     debug("Rush order product detected");
+     *     return Item.Price * 1.50; // 50% rush fee
+     * }
      */
     ProductName: string;
 
@@ -265,101 +298,261 @@ declare interface Item {
 
     /**
      * Whether this is a batch job
+     *
+     * @example
+     * if (Item.IsBatch) {
+     *     debug("Processing batch job with " + Item.NumberOfRecords + " records");
+     *     var batchSetupFee = 25.00;
+     *     return Item.Price + batchSetupFee;
+     * }
      */
     IsBatch: boolean;
 
     /**
      * Number of pages (-1 if not valid)
+     *
+     * @example
+     * if (Item.NumberOfPages > 0) {
+     *     var perPageCost = 0.10;
+     *     var pageCost = Item.NumberOfPages * perPageCost;
+     *     debug("Document has " + Item.NumberOfPages + " pages, adding $" + pageCost);
+     *     return Item.Price + pageCost;
+     * }
      */
     NumberOfPages: number;
 
     /**
      * Number of records (-1 if not valid)
+     *
+     * @example
+     * if (Item.NumberOfRecords > 0) {
+     *     var perRecordCost = 0.05;
+     *     var recordCost = Item.NumberOfRecords * perRecordCost;
+     *     debug("Batch has " + Item.NumberOfRecords + " records");
+     *     return Item.Price + recordCost;
+     * }
      */
     NumberOfRecords: number;
 
     /**
      * Array of pricing tiers with Price, Quantity, and CustomerRole
+     *
+     * @example
+     * // Find the best tier for the current quantity
+     * var tier = HelperMethods.FindTier(Item.Quantity, Item.PricingTiers, Item.CustomerRoles);
+     * if (tier) {
+     *     debug("Using tier: " + tier.Quantity + " @ $" + tier.Price);
+     *     return tier.Price * Item.Quantity;
+     * }
      */
     PricingTiers: Tier[];
 
     /**
      * Array of batch tiers (same as PricingTiers but for batch tier table)
+     *
+     * @example
+     * if (Item.IsBatch && Item.BatchTiers.length > 0) {
+     *     var batchTier = HelperMethods.FindTier(Item.NumberOfRecords, Item.BatchTiers);
+     *     if (batchTier) {
+     *         debug("Batch tier price: $" + batchTier.Price);
+     *     }
+     * }
      */
     BatchTiers: Tier[];
 
     /**
      * Price per record (-1 if not valid)
+     *
+     * @example
+     * if (Item.PricePerRecord > 0 && Item.NumberOfRecords > 0) {
+     *     var recordTotal = Item.PricePerRecord * Item.NumberOfRecords;
+     *     debug("Record pricing: " + Item.NumberOfRecords + " x $" + Item.PricePerRecord);
+     *     return recordTotal;
+     * }
      */
     PricePerRecord: number;
 
     /**
      * Array of attributes with Key, Value, IsRequired, Prompt, PriceAdjustment, etc.
+     *
+     * @example
+     * // Loop through all attributes and apply price adjustments
+     * var totalAdjustment = 0;
+     * for (var i = 0; i < Item.Attributes.length; i++) {
+     *     var attr = Item.Attributes[i];
+     *     debug("Attribute: " + attr.Key + " = " + attr.Value);
+     *     totalAdjustment += attr.PriceAdjustment || 0;
+     * }
+     * return Item.Price + totalAdjustment;
      */
     Attributes: Attribute[];
 
     /**
      * User email
+     *
+     * @example
+     * // Apply corporate discount for company emails
+     * if (Item.Email.endsWith("@mycompany.com")) {
+     *     debug("Corporate customer: " + Item.Email);
+     *     return Item.Price * 0.85; // 15% corporate discount
+     * }
      */
     Email: string;
 
     /**
      * Array of customer role system names
+     *
+     * @example
+     * // Check for wholesale pricing
+     * if (Item.CustomerRoles.indexOf("Wholesale") >= 0) {
+     *     debug("Wholesale customer detected");
+     *     return Item.Price * 0.70; // 30% wholesale discount
+     * } else if (Item.CustomerRoles.indexOf("VIP") >= 0) {
+     *     return Item.Price * 0.90; // 10% VIP discount
+     * }
      */
     CustomerRoles: string[];
 
     /**
      * Department name of user
+     *
+     * @example
+     * // Apply department-specific pricing
+     * if (Item.Department === "Marketing") {
+     *     debug("Marketing department order");
+     *     return Item.Price * 0.80; // 20% marketing discount
+     * } else if (Item.Department === "Sales") {
+     *     return Item.Price * 0.75; // 25% sales discount
+     * }
      */
     Department: string;
 
     /**
      * Array of other order items using the same custom pricing script
+     *
+     * @example
+     * // Calculate total quantity across all cart items for volume discount
+     * var totalQty = Item.Quantity;
+     * for (var i = 0; i < Item.OtherOrderItems.length; i++) {
+     *     totalQty += Item.OtherOrderItems[i].Quantity;
+     * }
+     * debug("Total quantity in cart: " + totalQty);
      */
     OtherOrderItems: Item[];
 
     /**
      * Alias of OtherOrderItems
+     *
+     * @example
+     * // Apply cart-wide discount if total exceeds threshold
+     * var cartTotal = 0;
+     * for (var i = 0; i < Item.CartItems.length; i++) {
+     *     cartTotal += Item.CartItems[i].Price * Item.CartItems[i].Quantity;
+     * }
+     * if (cartTotal > 500) {
+     *     debug("Cart total $" + cartTotal + " - applying 10% discount");
+     *     return Item.Price * 0.90;
+     * }
      */
     CartItems: Item[];
 
     /**
      * Index of this item in the other order item array (0 if not in array)
+     *
+     * @example
+     * // Apply setup fee only to first item
+     * if (Item.OrderItemIndex === 0) {
+     *     debug("First item - adding setup fee");
+     *     return Item.Price + 15.00;
+     * }
      */
     OrderItemIndex: number;
 
     /**
      * Index of this item in the other order item array (-1 if not in array)
+     *
+     * @example
+     * if (Item.CartItemIndex >= 0) {
+     *     debug("This is cart item #" + (Item.CartItemIndex + 1));
+     * }
      */
     CartItemIndex: number;
 
     /**
      * Whether this item is in the other order item array
+     *
+     * @example
+     * if (Item.IsInOtherOrderItems) {
+     *     debug("Item is part of multi-item order");
+     *     // Consider other items for bundle pricing
+     * }
      */
     IsInOtherOrderItems: boolean;
 
     /**
      * Value of the currently used discount code
+     *
+     * @example
+     * // Apply special discount for specific codes
+     * if (Item.DiscountCode === "SUMMER20") {
+     *     debug("Summer sale discount applied");
+     *     return Item.Price * 0.80; // 20% off
+     * } else if (Item.DiscountCode === "VIP50") {
+     *     return Item.Price * 0.50; // 50% off
+     * }
      */
     DiscountCode: string;
 
     /**
      * Array of versions with JobId, CustomName, and Quantity
+     *
+     * @example
+     * // Calculate pricing across all versions
+     * if (Item.Versions.length > 0) {
+     *     debug("Job has " + Item.Versions.length + " versions");
+     *     for (var i = 0; i < Item.Versions.length; i++) {
+     *         var ver = Item.Versions[i];
+     *         debug("Version: " + ver.CustomName + ", Qty: " + ver.Quantity);
+     *     }
+     * }
      */
     Versions: ItemVersion[];
 
     /**
      * Number of versions
+     *
+     * @example
+     * if (Item.NumberOfVersions > 1) {
+     *     debug("Multi-version job with " + Item.NumberOfVersions + " versions");
+     *     // Apply version discount
+     *     return Item.Price * 0.95; // 5% multi-version discount
+     * }
      */
     NumberOfVersions: number;
 
     /**
      * Whether this is a version of a job
+     *
+     * @example
+     * if (Item.IsVersion) {
+     *     debug("This item is a version of an existing job");
+     *     // Use version-specific pricing logic
+     * }
      */
     IsVersion: boolean;
 
     /**
      * Sum of all quantities of all versions
+     *
+     * @example
+     * // Use total version quantity for tier pricing
+     * if (Item.VersionsSumQuantity > 0) {
+     *     var tier = HelperMethods.FindTier(Item.VersionsSumQuantity, Item.PricingTiers);
+     *     if (tier) {
+     *         debug("Using combined version quantity: " + Item.VersionsSumQuantity);
+     *         return tier.Price;
+     *     }
+     * }
      */
     VersionsSumQuantity: number;
 

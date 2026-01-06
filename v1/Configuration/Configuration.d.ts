@@ -12,6 +12,8 @@
 
 /**
  * Interface representing the configuration object.
+ *
+ * @category Global Objects
  */
 interface Configuration {
     /**

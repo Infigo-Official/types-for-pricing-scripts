@@ -101,6 +101,8 @@ declare interface CsvHelper {
  * Helper methods available in pricing scripts for common calculations and data manipulation
  * These utilities extend the capabilities of pricing scripts and help create more flexible
  * and maintainable pricing logic.
+ *
+ * @category Helper Methods
  */
 declare interface HelperMethods {
     /**
