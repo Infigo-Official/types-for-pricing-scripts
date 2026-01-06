@@ -9,6 +9,8 @@ on:
     paths:
       - 'v1/**'
       - 'package.json'
+      - 'typedoc.json'
+      - 'DocumentationHome.md'
       - '.github/workflows/DocGeneration.yml'
 
 jobs:
