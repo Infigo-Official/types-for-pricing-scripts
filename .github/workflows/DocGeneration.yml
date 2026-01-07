@@ -25,11 +25,11 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build Docs and Deploy package
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '20.x'
+          node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
       - run: npm install
@@ -39,12 +39,10 @@ jobs:
           path: "docs"
       - uses: actions/deploy-pages@v4
       - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN  }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: '20.x'
+          node-version: 'lts/*'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@Infigo-Official'
       - run: echo @infigo-official:registry=https://npm.pkg.github.com >> .npmrc
