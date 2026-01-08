@@ -213,9 +213,11 @@ declare interface CheckoutAddress {
  * The checkout item object available in checkout pricing scripts.
  * Represents comprehensive checkout information including all items being purchased,
  * customer details, shipping information, and checkout context.
- * 
+ *
  * This object provides complete checkout context for pricing calculations that
  * need to consider shipping, customer information, and multi-item scenarios.
+ *
+ * @category Global Objects
  */
 declare interface CheckoutItem {
     /**

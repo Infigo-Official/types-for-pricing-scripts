@@ -13,9 +13,11 @@
  * The session object available in pricing scripts.
  * Represents session-level data and provides access to customer information
  * and shopping cart items that are available during the current session.
- * 
+ *
  * This object provides session-wide context for pricing calculations that
  * may need to consider multiple items or customer session data.
+ *
+ * @category Global Objects
  */
 declare interface Session {
     /**

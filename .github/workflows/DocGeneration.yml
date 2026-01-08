@@ -9,7 +9,8 @@ on:
     paths:
       - 'v1/**'
       - 'package.json'
-      - 'docusaurus-docs/**'
+      - 'typedoc.json'
+      - 'DocumentationHome.md'
       - '.github/workflows/DocGeneration.yml'
 
 jobs:
@@ -35,7 +36,7 @@ jobs:
       - run: npm run docs
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: "docusaurus-docs/build"
+          path: "docs"
       - uses: actions/deploy-pages@v4
       - run: npm publish --provenance --access public
 

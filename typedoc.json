@@ -1,0 +1,22 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./v1/index.d.ts"],
+  "out": "./docs",
+  "name": "Pricing Script Documentation",
+  "readme": "./DocumentationHome.md",
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Global Objects",
+    "Output Functions",
+    "Helper Methods",
+    "Types",
+    "*"
+  ],
+  "navigationLinks": {
+    "NPM": "https://www.npmjs.com/package/@infigo-official/types-for-pricing-script",
+    "GitHub": "https://github.com/Infigo-Official/types-for-pricing-scripts"
+  },
+  "sort": ["alphabetical"],
+  "visibilityFilters": {},
+  "searchInComments": true
+}
