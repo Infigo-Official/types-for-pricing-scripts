@@ -2,6 +2,8 @@
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["./v1/index.d.ts"],
   "out": "./docs",
+  "json": "./docs/documentation.json",
+  "emit": "both",
   "name": "Pricing Script Documentation",
   "readme": "./DocumentationHome.md",
   "categorizeByGroup": true,

@@ -1,6 +1,6 @@
 {
   "name": "@infigo-official/types-for-pricing-script",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Type definitions for Pricing Script Scripting",
   "types": "v1/index.d.ts",
   "devDependencies": {
@@ -9,7 +9,7 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
-    "docs": "npx typedoc",
+    "docs": "npx typedoc && node scripts/generate-rag.js",
     "start": "npx http-server docs -p 3000 -o"
   },
   "repository": {
