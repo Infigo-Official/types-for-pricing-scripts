@@ -9,7 +9,7 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
-    "docs": "npx typedoc",
+    "docs": "npx typedoc && node scripts/generate-rag.js",
     "start": "npx http-server docs -p 3000 -o"
   },
   "repository": {
