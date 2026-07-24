@@ -428,6 +428,20 @@ declare interface Item {
     Department: string;
 
     /**
+     * The cost code of the customer's department, if the customer belongs to one.
+     * Empty when the customer has no department, or the department has no cost code set.
+     * Useful for cost-centre-based pricing rules or for tagging the calculated price.
+     *
+     * @example
+     * // Apply cost-centre-specific pricing
+     * if (Item.DepartmentCostCode === "CC-100") {
+     *     debug("Cost centre CC-100 order");
+     *     return Item.Price * 0.90; // 10% discount for cost centre CC-100
+     * }
+     */
+    DepartmentCostCode: string;
+
+    /**
      * Array of other order items using the same custom pricing script
      *
      * @example
