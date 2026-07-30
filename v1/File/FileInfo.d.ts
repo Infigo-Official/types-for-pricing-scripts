@@ -134,6 +134,22 @@ declare interface FileInfo {
     Content: string[];
 
     /**
+     * The parsed CSV content of the file as a 2D array of strings (rows by columns).
+     * Only set when the file is a CSV/text file read with the readContent flag enabled;
+     * the first row typically contains the column headers. Absent for non-CSV files.
+     *
+     * @example
+     * var fileInfo = Item.getFileInfo("dataFile", true);
+     * if (fileInfo && fileInfo.CsvContent) {
+     *     var headers = fileInfo.CsvContent[0];
+     *     for (var i = 1; i < fileInfo.CsvContent.length; i++) {
+     *         var row = fileInfo.CsvContent[i];
+     *     }
+     * }
+     */
+    CsvContent: string[][];
+
+    /**
      * Error message indicating any issues encountered during file processing.
      * This value is empty if retrieving file information was successful.
      * Used for error handling and debugging file processing issues.

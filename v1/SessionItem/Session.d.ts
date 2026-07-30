@@ -84,6 +84,31 @@ declare interface Session {
      * }
      */
     Department: string;
+
+    /**
+     * Cost code of the customer's department for the current session.
+     * Empty when the customer has no department, or the department has no cost code set.
+     * Used for cost-centre-based session pricing and business logic.
+     *
+     * @example
+     * console("Customer department cost code: " + Session.DepartmentCostCode);
+     * if (Session.DepartmentCostCode === "CC-100") {
+     *     console("Cost centre CC-100 - apply centre-specific pricing");
+     * }
+     */
+    DepartmentCostCode: string;
+
+    /**
+     * Value of the discount code currently applied in the session.
+     * Reflects the discount coupon code entered by the customer, if any.
+     * Used to apply code-specific pricing or promotions at the session level.
+     *
+     * @example
+     * if (Session.DiscountCode === "SUMMER20") {
+     *     console("Summer discount code applied in session");
+     * }
+     */
+    DiscountCode: string;
 }
 
 /**
