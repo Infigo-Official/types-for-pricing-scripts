@@ -114,6 +114,13 @@ Your IDE will now provide:
 | `error(message)` | Error messages shown to users |
 | `console(message)` | Console logging for debugging |
 
+### Global Functions
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `parseCsv(csv, hasHeaders?, delimiter?, quote?, disableNumberConversion?)` | `(string \| number)[][] \| null` | Parse CSV text into a 2D array |
+| `setTierPrice(quantity, price)` | `void` | Set a tier price for the product page tier table (dynamic tier prices) |
+
 ### Item Properties
 
 <details>
@@ -341,6 +348,8 @@ types-for-pricing-script/
 │   │   └── Output.d.ts          # Output functions
 │   ├── Helpers/
 │   │   └── Helpers.d.ts         # Helper methods
+│   ├── Functions/
+│   │   └── Functions.d.ts       # Global functions (parseCsv, setTierPrice)
 │   ├── SessionItem/
 │   │   └── Session.d.ts         # Session interface
 │   ├── CheckoutItem/

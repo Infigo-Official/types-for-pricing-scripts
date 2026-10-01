@@ -571,6 +571,29 @@ declare interface Item {
     VersionsSumQuantity: number;
 
     /**
+     * The mode the script is running in: "Product", "CheckoutAttribute" or "LandingPageWithTierPrices".
+     *
+     * @example
+     * if (Item.ScriptContext === "CheckoutAttribute") {
+     *     debug("Pricing a checkout attribute");
+     * }
+     */
+    ScriptContext: string;
+
+    /**
+     * True when the script is run to build the product page tier price table
+     * (ScriptContext is "LandingPageWithTierPrices"). In this mode, call {@link setTierPrice} for each tier quantity.
+     *
+     * @example
+     * if (Item.IsTierPriceMode) {
+     *     for (var i = 0; i < Item.PricingTiers.length; i++) {
+     *         setTierPrice(Item.PricingTiers[i].Quantity, Item.PricingTiers[i].Price * 0.9);
+     *     }
+     * }
+     */
+    IsTierPriceMode: boolean;
+
+    /**
      * Get file information for attached files
      * @param attributeId - ID of the attribute
      * @param readContent - Whether to read file content

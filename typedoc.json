@@ -10,6 +10,7 @@
   "categoryOrder": [
     "Global Objects",
     "Output Functions",
+    "Global Functions",
     "Helper Methods",
     "Types",
     "*"
