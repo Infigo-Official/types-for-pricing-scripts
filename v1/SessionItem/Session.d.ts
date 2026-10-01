@@ -109,6 +109,51 @@ declare interface Session {
      * }
      */
     DiscountCode: string;
+
+    /**
+     * Get the current value of a checkout attribute for the session customer.
+     * The attribute is matched by name, ignoring case.
+     * For attributes with predefined values (drop-down, radio buttons, checkboxes) the value names are returned,
+     * comma-separated when several are selected.
+     * Returns an empty string when the attribute does not exist or has no value.
+     * @param attribute - Name of the checkout attribute
+     * @returns The stored value, or an empty string
+     *
+     * @example
+     * var deliveryType = Session.getCheckoutAttributeValue("Delivery Type");
+     * if (deliveryType === "Express") {
+     *     console("Express delivery selected - apply surcharge");
+     * }
+     */
+    getCheckoutAttributeValue(attribute: string): string;
+
+    /**
+     * Set a checkout attribute value for the session customer. The value is saved on the customer
+     * and carried into the order, the same as if the customer had entered it at checkout.
+     * The attribute is matched by name, ignoring case.
+     *
+     * The value must suit the attribute type:
+     * - Drop-down, radio buttons, checkboxes: the name of one of the attribute's predefined values.
+     *   For checkboxes the value is added to the existing selection.
+     * - Date picker: a date, preferably in ISO format (`yyyy-MM-dd`).
+     * - Number: a number using `.` as the decimal separator.
+     * - Informational attributes cannot hold a value.
+     *
+     * If the attribute does not exist or the value is invalid, an error message is reported and nothing is saved.
+     * Setting the value it already holds does nothing.
+     * The call is ignored while tier prices are being calculated.
+     * @param attribute - Name of the checkout attribute
+     * @param value - Value to set
+     *
+     * @example
+     * if (Session.CustomerRoles.includes("Wholesale")) {
+     *     Session.setCheckoutAttributeValue("Delivery Type", "Pallet");
+     * }
+     *
+     * @example
+     * Session.setCheckoutAttributeValue("Required By", "2026-12-24");
+     */
+    setCheckoutAttributeValue(attribute: string, value: string): void;
 }
 
 /**

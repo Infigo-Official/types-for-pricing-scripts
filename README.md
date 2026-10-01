@@ -181,6 +181,13 @@ Your IDE will now provide:
 | `getGlobalFileContent(filename)` | `string[]` | Load global configuration files |
 | `getGlobalFileCsvContent(filename)` | `string[][]` | Load CSV data from global files |
 
+### Session Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getCheckoutAttributeValue(attributeName)` | `string` | Get checkout attribute value by name |
+| `setCheckoutAttributeValue(attributeName, value)` | `void` | Set checkout attribute value on the customer |
+
 ### Helper Methods
 
 | Method | Description |
