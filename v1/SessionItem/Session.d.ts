@@ -111,6 +111,39 @@ declare interface Session {
     DiscountCode: string;
 
     /**
+     * The mode the script is running in: "Product", "CheckoutAttribute" or "LandingPageWithTierPrices".
+     *
+     * @example
+     * if (Session.ScriptContext === "CheckoutAttribute") {
+     *     debug("Pricing a checkout attribute");
+     * }
+     */
+    ScriptContext: string;
+
+    /**
+     * True when the script is run to build the product page tier price table
+     * (ScriptContext is "LandingPageWithTierPrices").
+     * Setting checkout attribute values is ignored in this mode.
+     *
+     * @example
+     * if (!Session.IsTierPriceMode) {
+     *     Session.setCheckoutAttributeValue("Delivery Type", "Pallet");
+     * }
+     */
+    IsTierPriceMode: boolean;
+
+    /**
+     * Serialize a value to an indented JSON string. Handy for logging platform objects while writing a script.
+     * Returns "null" for null, and a JSON object with an `error` property if serialization fails.
+     * @param obj - The value to serialize
+     * @returns JSON text
+     *
+     * @example
+     * console("Discount code: " + Session.ToJson(Session.DiscountCode));
+     */
+    ToJson(obj: any): string;
+
+    /**
      * Get the current value of a checkout attribute for the session customer.
      * The attribute is matched by name, ignoring case.
      * For attributes with predefined values (drop-down, radio buttons, checkboxes) the value names are returned,

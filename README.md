@@ -2,7 +2,7 @@
 
 Type definitions for the Infigo Pricing Script scripting interface.
 
-![Version](https://img.shields.io/badge/version-1.0.3-blue)
+![Version](https://img.shields.io/badge/version-1.0.9-blue)
 ![TypeScript](https://img.shields.io/badge/typescript-4.9.5-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![npm](https://img.shields.io/npm/v/@infigo-official/types-for-pricing-script)
@@ -101,18 +101,25 @@ Your IDE will now provide:
 | `Item` | The main product item being priced with all its properties and methods |
 | `Session` | Session-level data including cart items and customer information |
 | `CheckoutItem` | Checkout context with shipping addresses and customer details |
-| `Configuration` | Script configuration and parameters |
+| `Configuration` | Script configuration via `Configuration.ScriptConfig()` |
+| `Constants` | Constants such as `Constants.MessageArea` |
 | `HelperMethods` | Utility functions for pricing calculations |
 
 ### Output Functions
 
 | Function | Description |
 |----------|-------------|
-| `debug(message)` | Debug messages (admin testing only) |
-| `alert(message)` | Information messages shown to users |
-| `warning(message)` | Warning messages shown to users |
-| `error(message)` | Error messages shown to users |
-| `console(message)` | Console logging for debugging |
+| `debug(message, location?)` | Debug messages (admin testing only) |
+| `alert(message, location?)` | Information messages shown to users |
+| `warning(message, location?)` | Warning messages shown to users |
+| `error(message, location?)` | Error messages shown to users |
+| `console(message, location?)` | Console logging for debugging |
+
+The optional `location` chooses where the message is shown. Use a `Constants.MessageArea` value: `All` (default), `ProductDetails`, `PostEditor`, `Basket`, `AdminArea` or `ProductDetailsAndPostEditor`.
+
+```javascript
+alert("Bulk discount applied", Constants.MessageArea.Basket);
+```
 
 ### Global Functions
 
@@ -141,6 +148,9 @@ Your IDE will now provide:
 | Property | Type | Description |
 |----------|------|-------------|
 | `ProductName` | `string` | Display name |
+| `ProductId` | `number` | Product ID |
+| `ProductGroupName` | `string \| null` | Product group name |
+| `Specifications` | `Specification[]` | Specification attributes (Key, Value, DefaultValue) |
 | `Sku` | `string` | Product SKU |
 | `ActualSku` | `string` | SKU including combinations |
 | `Categories` | `string[]` | Product categories |
@@ -155,6 +165,14 @@ Your IDE will now provide:
 | `IsBatch` | `boolean` | Batch job indicator |
 | `NumberOfPages` | `number` | Pages in document |
 | `NumberOfRecords` | `number` | Records count |
+| `JobId` | `string \| null` | ID of the job behind the item |
+| `CanSetJobProperties` | `boolean` | Whether the item has a job whose properties can be set |
+
+#### Script Context
+| Property | Type | Description |
+|----------|------|-------------|
+| `ScriptContext` | `string` | `"Product"`, `"CheckoutAttribute"` or `"LandingPageWithTierPrices"` |
+| `IsTierPriceMode` | `boolean` | Script is building the product page tier price table |
 
 #### Pricing Tiers
 | Property | Type | Description |
@@ -182,11 +200,20 @@ Your IDE will now provide:
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `getFileInfo(attributeId, readContent?)` | `FileInfo` | Get information about uploaded files |
+| `getFileInfo(attributeId, readContent, getTextFileContent?)` | `FileInfo \| null` | Get information about uploaded files |
 | `getAttributeValue(attributeName)` | `string` | Get attribute value by name |
 | `setAttributeValue(attributeName, value)` | `void` | Set attribute value |
-| `getGlobalFileContent(filename)` | `string[]` | Load global configuration files |
+| `getGlobalFileContent(filename)` | `FileInfo` | Load global configuration files |
 | `getGlobalFileCsvContent(filename)` | `string[][]` | Load CSV data from global files |
+| `getRowsFromLookup(filename, columnNames, columnValues)` | `string[][] \| null` | Indexed lookup of matching rows in a global CSV file |
+| `ToJson(obj)` | `string` | Serialize a value to JSON for logging |
+
+### Session Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `ScriptContext` | `string` | `"Product"`, `"CheckoutAttribute"` or `"LandingPageWithTierPrices"` |
+| `IsTierPriceMode` | `boolean` | Script is building the product page tier price table |
 
 ### Session Methods
 
@@ -194,6 +221,7 @@ Your IDE will now provide:
 |--------|---------|-------------|
 | `getCheckoutAttributeValue(attributeName)` | `string` | Get checkout attribute value by name |
 | `setCheckoutAttributeValue(attributeName, value)` | `void` | Set checkout attribute value on the customer |
+| `ToJson(obj)` | `string` | Serialize a value to JSON for logging |
 
 ### Helper Methods
 
@@ -423,6 +451,13 @@ Item.setAttributeValue("custom_field", "value");
 ```
 
 ## Changelog
+
+### v1.0.9
+- Added Item `ProductId`, `ProductGroupName`, `JobId`, `CanSetJobProperties`, `Specifications`, `getRowsFromLookup`, `ToJson` and the three-argument `getFileInfo`
+- Added Session `ScriptContext`, `IsTierPriceMode` and `ToJson`
+- Added `Constants.MessageArea` and the optional `location` argument of the output functions
+- Removed `Configuration.Parameters()`, which does not exist at runtime
+- Fixed the File-Based Pricing example to use `Item.getFileInfo()`
 
 ### v1.0.3
 - Updated documentation

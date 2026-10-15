@@ -13,6 +13,7 @@ The item management system provides access to all product-related data and funct
 - **AttributeValue**: Individual values within attributes, including tier-based pricing adjustments that can vary based on quantity or customer roles.
 - **Tier**: Quantity-based pricing tiers with customer role support, allowing different pricing for different customer types.
 - **Version**: Job versioning information including quantities and custom names, useful for tracking pricing changes across job iterations.
+- **Specification**: The product's specification attributes (for example paper weight), each with a name and value.
 
 ### File Handling
 
@@ -25,8 +26,9 @@ The file handling system provides comprehensive information about uploaded files
 
 The system configuration provides access to script settings, parameters, and output functions that control behavior and functionality.
 
-- **Configuration**: Provides access to script configuration settings and parameters that control the behavior of the pricing script.
-- **Output Functions**: Allow scripts to communicate with users and provide feedback about pricing calculations and decisions.
+- **Configuration**: Provides access to the script's configuration through `Configuration.ScriptConfig()`, so one script can be reused with different settings.
+- **Output Functions**: Allow scripts to communicate with users and provide feedback about pricing calculations and decisions. An optional second argument from `Constants.MessageArea` chooses where the message is shown, such as only in the basket.
+- **Global Functions**: `parseCsv` parses CSV text, and `setTierPrice` fills the product page tier price table.
 
 ### Helper Methods
 
@@ -305,32 +307,55 @@ debug("Unit: $" + unitPrice + ", Setup: $" + setupFee + ", Total: $" + totalPric
 return totalPrice;
 ```
 
+Look up a price row in a large CSV file from Global Data by attribute values:
+
+```javascript
+// prices.csv has the columns Material, Size, Price
+var rows = Item.getRowsFromLookup("prices.csv", ["Material", "Size"],
+    [Item.getAttributeValue("Material"), Item.getAttributeValue("Size")]);
+
+// rows[0] is the header row; matches start at rows[1]
+if (!rows || rows.length < 2) {
+    error("No price found for this combination", Constants.MessageArea.ProductDetails);
+    return 0;
+}
+
+var unitPrice = parseFloat(rows[1][rows[0].indexOf("Price")]);
+return unitPrice * Item.Quantity;
+```
+
 ### File-Based Pricing
 
 Calculate pricing based on uploaded file properties:
 
 ```javascript
 var basePrice = 0;
-var files = Item.GetUploadedFiles();
 
-if (files && files.length > 0) {
-    for (var i = 0; i < files.length; i++) {
-        var file = files[i];
+// Uploaded files belong to the product's file upload attributes
+for (var i = 0; i < Item.Attributes.length; i++) {
+    var attr = Item.Attributes[i];
+    if (attr.Type !== "FileUpload") {
+        continue;
+    }
 
-        // Price per page for PDFs
-        if (file.MimeType === "application/pdf") {
-            var pageCount = file.PageCount || 1;
-            var pricePerPage = 0.50;
-            basePrice += pageCount * pricePerPage;
-            debug("PDF: " + pageCount + " pages @ $" + pricePerPage + "/page");
-        }
-        // Price by file size for images
-        else if (file.MimeType.indexOf("image/") === 0) {
-            var sizeInMB = file.Size / (1024 * 1024);
-            var pricePerMB = 2.00;
-            basePrice += sizeInMB * pricePerMB;
-            debug("Image: " + sizeInMB.toFixed(2) + "MB @ $" + pricePerMB + "/MB");
-        }
+    var file = Item.getFileInfo(String(attr.Id), false);
+    if (!file) {
+        continue; // nothing uploaded for this attribute
+    }
+
+    // Price per page for PDFs
+    if (file.MimeType === "application/pdf") {
+        var pageCount = file.NumberOfPages > 0 ? file.NumberOfPages : 1;
+        var pricePerPage = 0.50;
+        basePrice += pageCount * pricePerPage;
+        debug("PDF: " + pageCount + " pages @ $" + pricePerPage + "/page");
+    }
+    // Price by file size for images
+    else if (file.MimeType.indexOf("image/") === 0) {
+        var sizeInMB = file.Size / (1024 * 1024);
+        var pricePerMB = 2.00;
+        basePrice += sizeInMB * pricePerMB;
+        debug("Image: " + sizeInMB.toFixed(2) + "MB @ $" + pricePerMB + "/MB");
     }
 }
 
