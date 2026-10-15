@@ -157,6 +157,19 @@ declare interface Item {
     CanSetWeight: boolean;
 
     /**
+     * Indicates whether the item has a job behind it (an editor or upload job) whose properties,
+     * such as the weight, can be set by the script. False when there is no job yet,
+     * for example when the price is calculated on the product page before the customer has started a job.
+     * {@link Item.CanSetWeight} is the older name for the same check.
+     *
+     * @example
+     * if (Item.CanSetJobProperties) {
+     *     debug("Pricing job " + Item.JobId);
+     * }
+     */
+    CanSetJobProperties: boolean;
+
+    /**
      * The Stock Keeping Unit (SKU) of the product variant.
      * This is the unique identifier for the product variant and is used
      * for inventory management and order processing.
@@ -237,6 +250,27 @@ declare interface Item {
      * }
      */
     ProductName: string;
+
+    /**
+     * The numeric ID of the product.
+     * Useful when one script is shared by several products and needs product-specific rules.
+     *
+     * @example
+     * if (Item.ProductId === 1234) {
+     *     return Item.Price * Item.Quantity * 0.9; // 10% off this product only
+     * }
+     */
+    ProductId: number;
+
+    /**
+     * The name of the product group the product belongs to, or null when it is not in a group.
+     *
+     * @example
+     * if (Item.ProductGroupName === "Business Cards") {
+     *     debug("Business card pricing applies");
+     * }
+     */
+    ProductGroupName: string | null;
 
     /**
      * Array of category names that this product belongs to.
@@ -335,6 +369,17 @@ declare interface Item {
     NumberOfRecords: number;
 
     /**
+     * The ID of the job behind the item, or null when there is no job yet
+     * (see {@link Item.CanSetJobProperties}).
+     *
+     * @example
+     * if (Item.JobId) {
+     *     console("Job: " + Item.JobId);
+     * }
+     */
+    JobId: string | null;
+
+    /**
      * Array of pricing tiers with Price, Quantity, and CustomerRole
      *
      * @example
@@ -386,6 +431,21 @@ declare interface Item {
      * return Item.Price + totalAdjustment;
      */
     Attributes: Attribute[];
+
+    /**
+     * Array of the product's specification attributes, each with a Key, Value and DefaultValue.
+     * Value is localized to the customer's language; DefaultValue is the untranslated value,
+     * which is the safer one to compare against in scripts.
+     *
+     * @example
+     * for (var i = 0; i < Item.Specifications.length; i++) {
+     *     var spec = Item.Specifications[i];
+     *     if (spec.Key === "Paper Weight" && spec.DefaultValue === "350gsm") {
+     *         return Item.Price * Item.Quantity + 15.00; // heavy stock surcharge
+     *     }
+     * }
+     */
+    Specifications: Specification[];
 
     /**
      * User email
@@ -594,12 +654,47 @@ declare interface Item {
     IsTierPriceMode: boolean;
 
     /**
-     * Get file information for attached files
-     * @param attributeId - ID of the attribute
-     * @param readContent - Whether to read file content
-     * @returns FileInfo object
+     * Get file information for the file uploaded to a file upload attribute.
+     * Returns null when the attribute has no uploaded file.
+     *
+     * For text and CSV files, `readContent` counts the lines into `NumberOfRecords`;
+     * the file's lines are not returned. Use the three-argument overload to get them.
+     * @param attributeId - ID of the file upload attribute, as a string (`String(attr.Id)`)
+     * @param readContent - Whether to read text and CSV files to count their records
+     * @returns FileInfo object, or null
+     *
+     * @example
+     * for (var i = 0; i < Item.Attributes.length; i++) {
+     *     var attr = Item.Attributes[i];
+     *     if (attr.Type === "FileUpload") {
+     *         var file = Item.getFileInfo(String(attr.Id), false);
+     *         if (file && file.NumberOfPages > 0) {
+     *             debug(attr.Prompt + ": " + file.NumberOfPages + " pages");
+     *         }
+     *     }
+     * }
      */
-    getFileInfo(attributeId: string, readContent: boolean): FileInfo;
+    getFileInfo(attributeId: string, readContent: boolean): FileInfo | null;
+
+    /**
+     * Get file information for the file uploaded to a file upload attribute,
+     * optionally including the content of text and CSV files.
+     * Returns null when the attribute has no uploaded file.
+     *
+     * With `readContent` and `getTextFileContent` both true, text and CSV files also fill
+     * `Content` (the lines) and, for CSV, `CsvContent` (rows by columns).
+     * @param attributeId - ID of the file upload attribute, as a string (`String(attr.Id)`)
+     * @param readContent - Whether to read text and CSV files
+     * @param getTextFileContent - Whether to return the file's lines as well as the record count
+     * @returns FileInfo object, or null
+     *
+     * @example
+     * var file = Item.getFileInfo(String(attr.Id), true, true);
+     * if (file && file.CsvContent) {
+     *     debug("Uploaded list has " + (file.CsvContent.length - 1) + " addresses");
+     * }
+     */
+    getFileInfo(attributeId: string, readContent: boolean, getTextFileContent: boolean): FileInfo | null;
 
     /**
      * Shortcut method to retrieve an attribute value by name
@@ -687,6 +782,43 @@ declare interface Item {
      * }
      */
     getGlobalFileCsvContent(filename: string): string[][] | null;
+
+    /**
+     * Look up rows in a CSV file from Global Data by the values of one or more columns.
+     * The file is indexed by the given columns on first use and the index is cached,
+     * so repeated lookups in large price tables stay fast.
+     *
+     * The result's first row is the header row; the matching rows follow it.
+     * All values are strings. Returns null when the file does not exist, or when the two arrays
+     * are empty or differ in length.
+     * @param filename - Name of the CSV file in Global Data
+     * @param indexedColumnNames - Header names of the columns to match on; order matters
+     * @param columnValues - Values to match, in the same order as `indexedColumnNames`
+     * @returns Header row followed by the matching rows, or null
+     *
+     * @example
+     * var rows = Item.getRowsFromLookup("prices.csv", ["Material", "Size"],
+     *     [Item.getAttributeValue("Material"), Item.getAttributeValue("Size")]);
+     * if (rows && rows.length > 1) {
+     *     var priceColumn = rows[0].indexOf("Price");
+     *     return parseFloat(rows[1][priceColumn]) * Item.Quantity;
+     * }
+     * error("No price found for this combination");
+     */
+    getRowsFromLookup(filename: string, indexedColumnNames: string[], columnValues: string[]): string[][] | null;
+
+    /**
+     * Serialize a value to an indented JSON string. Handy for logging platform objects while writing a script.
+     * Returns "null" for null, and a JSON object with an `error` property if serialization fails.
+     * @param obj - The value to serialize
+     * @returns JSON text
+     *
+     * @example
+     * if (Item.Specifications.length > 0) {
+     *     console(Item.ToJson(Item.Specifications[0]));
+     * }
+     */
+    ToJson(obj: any): string;
 }
 
 /**
@@ -712,8 +844,8 @@ declare interface Item {
  * }
  * 
  * // Get file information
- * var fileInfo = Item.getFileInfo("fileAttributeId", true);
- * if (fileInfo.NumberOfPages > 0) {
+ * var fileInfo = Item.getFileInfo("123", false); // "123" is the file upload attribute's Id
+ * if (fileInfo && fileInfo.NumberOfPages > 0) {
  *     console("File has " + fileInfo.NumberOfPages + " pages");
  * }
  * 

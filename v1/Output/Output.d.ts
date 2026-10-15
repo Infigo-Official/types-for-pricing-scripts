@@ -18,12 +18,16 @@
  *
  * @category Output Functions
  * @param message - The debug message to display to the user
+ * @param location - Where to show the message, one of {@link Constants.MessageArea}; shown everywhere when omitted
  *
  * @example
  * debug("Calculating price for item: " + Item.ProductName);
  * debug("Base price: $" + Item.Price + ", Quantity: " + Item.Quantity);
+ *
+ * @example
+ * debug("Tier lookup took the fallback path", Constants.MessageArea.AdminArea);
  */
-declare function debug(message: string): void;
+declare function debug(message: any, location?: string): void;
 
 /**
  * Output an alert message to the user interface.
@@ -32,12 +36,16 @@ declare function debug(message: string): void;
  *
  * @category Output Functions
  * @param message - The alert message to display to the user
+ * @param location - Where to show the message, one of {@link Constants.MessageArea}; shown everywhere when omitted
  *
  * @example
  * alert("Special pricing applied: 20% discount for bulk orders");
  * alert("Price updated based on selected attributes");
+ *
+ * @example
+ * alert("Bulk discount applied", Constants.MessageArea.Basket);
  */
-declare function alert(message: string): void;
+declare function alert(message: any, location?: string): void;
 
 /**
  * Output a warning message to the user interface.
@@ -46,12 +54,16 @@ declare function alert(message: string): void;
  *
  * @category Output Functions
  * @param message - The warning message to display to the user
+ * @param location - Where to show the message, one of {@link Constants.MessageArea}; shown everywhere when omitted
  *
  * @example
  * warning("Large file detected - processing may take longer");
  * warning("Some attributes may affect shipping costs");
+ *
+ * @example
+ * warning("Order 50 or more for a 10% discount", Constants.MessageArea.ProductDetails);
  */
-declare function warning(message: string): void;
+declare function warning(message: any, location?: string): void;
 
 /**
  * Output an error message to the user interface.
@@ -60,12 +72,16 @@ declare function warning(message: string): void;
  *
  * @category Output Functions
  * @param message - The error message to display to the user
+ * @param location - Where to show the message, one of {@link Constants.MessageArea}; shown everywhere when omitted
  *
  * @example
  * error("Unable to calculate price - missing required attributes");
  * error("File processing failed - please check file format");
+ *
+ * @example
+ * error("Please upload a PDF file", Constants.MessageArea.ProductDetailsAndPostEditor);
  */
-declare function error(message: string): void;
+declare function error(message: any, location?: string): void;
 
 /**
  * Output a message to the browser console/logs.
@@ -74,9 +90,10 @@ declare function error(message: string): void;
  *
  * @category Output Functions
  * @param message - The message to log to the console
+ * @param location - Where to show the message, one of {@link Constants.MessageArea}; shown everywhere when omitted
  *
  * @example
  * console("Script execution started");
  * console("Final calculated price: $" + finalPrice);
  */
-declare function console(message: string): void;
+declare function console(message: any, location?: string): void;
