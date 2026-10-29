@@ -50,7 +50,7 @@ declare interface CheckoutCustomer {
      * 
      * @example
      * console("Customer roles: " + CheckoutItem.Customer.Roles.join(", "));
-     * if (CheckoutItem.Customer.Roles.indexOf("VIP") >= 0) {
+     * if (HelperMethods.Contains(CheckoutItem.Customer.Roles, "VIP")) {
      *     console("VIP customer checkout");
      * }
      */
@@ -61,7 +61,7 @@ declare interface CheckoutCustomer {
      * Represents the organizational department the customer belongs to.
      * 
      * @example
-     * if (CheckoutItem.Customer.DepartmentName === "Procurement") {
+     * if (CheckoutItem.Customer.DepartmentName == "Procurement") {
      *     console("Procurement department checkout - apply bulk pricing");
      * }
      */
@@ -85,7 +85,7 @@ declare interface CheckoutCountry {
      * Two-letter ISO country code.
      * 
      * @example
-     * if (CheckoutItem.CountryFrom.TwoLetterIsoCode === "US") {
+     * if (CheckoutItem.CountryFrom.TwoLetterIsoCode == "US") {
      *     console("Domestic US shipping");
      * }
      */
@@ -125,7 +125,7 @@ declare interface CheckoutStateProvince {
      * State or province abbreviation.
      * 
      * @example
-     * if (CheckoutItem.StateProvince.Abbreviation === "CA") {
+     * if (CheckoutItem.StateProvince.Abbreviation == "CA") {
      *     console("California shipping - apply CA tax");
      * }
      */
@@ -286,7 +286,7 @@ declare interface CheckoutItem {
      * 
      * @example
      * console("Checkout mode: " + CheckoutItem.Mode);
-     * if (CheckoutItem.Mode === "express") {
+     * if (CheckoutItem.Mode == "express") {
      *     console("Express checkout - apply expedited processing");
      * }
      */
@@ -338,7 +338,7 @@ declare interface CheckoutItem {
  * 
  * @example
  * // Geographic-based pricing
- * if (CheckoutItem.Address && CheckoutItem.Address.Country.TwoLetterIsoCode === "CA") {
+ * if (CheckoutItem.Address && CheckoutItem.Address.Country.TwoLetterIsoCode == "CA") {
  *     console("Canadian shipping - apply CAD pricing");
  * }
  * 
@@ -348,7 +348,7 @@ declare interface CheckoutItem {
  * }
  * 
  * // Customer role-based checkout pricing
- * if (CheckoutItem.Customer.Roles.indexOf("Premium") >= 0) {
+ * if (HelperMethods.Contains(CheckoutItem.Customer.Roles, "Premium")) {
  *     console("Premium customer checkout - free shipping");
  * }
  * 
@@ -358,12 +358,12 @@ declare interface CheckoutItem {
  * }
  * 
  * // Express checkout handling
- * if (CheckoutItem.Mode === "express") {
+ * if (CheckoutItem.Mode == "express") {
  *     console("Express checkout - add expedited processing fee");
  * }
  * 
  * // State-specific tax calculation
- * if (CheckoutItem.StateProvince && CheckoutItem.StateProvince.Abbreviation === "NY") {
+ * if (CheckoutItem.StateProvince && CheckoutItem.StateProvince.Abbreviation == "NY") {
  *     console("New York delivery - apply NY state tax");
  * }
  */

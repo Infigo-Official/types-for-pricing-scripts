@@ -46,7 +46,7 @@ Helper methods provide utility functions for common pricing calculations and dat
 
 ### Session and Checkout
 
-- **Session**: The customer's session (email, roles, department, cart items) and the checkout attribute methods `getCheckoutAttributeValue` / `setCheckoutAttributeValue`. Available in product and checkout attribute scripts.
+- **Session**: The customer's session (email, roles, department, cart items) and the checkout attribute methods `getCheckoutAttributeValue` / `setCheckoutAttributeValue`. Available in product and checkout attribute scripts whenever there is a customer. The admin product Test button runs without a customer, so `Session` is undefined there; guard with `if (typeof Session !== "undefined")`.
 - **CheckoutItem**: The checkout context, with the customer, address and items, for scripts attached to checkout attributes.
 
 ## Writing Scripts in an Editor
@@ -69,6 +69,18 @@ Scripts run on an ES5 JavaScript engine. Write plain ES5 (`var`, `function`, `in
 ```
 
 Scripts return the price from the top level, which TypeScript reports as an error. Put `// @ts-ignore` on the line above that `return`.
+
+### Comparing Platform Values
+
+Strings, numbers and booleans that come from the platform (`Item.ScriptContext`, `Item.Price`, attribute values, CSV cells, role names) are wrapped objects in the script engine, so strict comparisons never match them:
+
+| Instead of | Use |
+|---|---|
+| `Item.ScriptContext === "Product"` | `Item.ScriptContext == "Product"` |
+| `Item.CustomerRoles.indexOf("VIP") >= 0` | `HelperMethods.Contains(Item.CustomerRoles, "VIP")` |
+| `rows[0].indexOf("Price")` | a loop comparing each `rows[0][c] == "Price"` |
+
+String methods such as `indexOf` and `toLowerCase` work on platform strings. To get a plain JavaScript value, convert it with `String(...)` or `Number(...)`.
 
 ## Scripting Principles
 
@@ -344,8 +356,13 @@ if (!rows || rows.length < 2) {
     return 0;
 }
 
-var unitPrice = parseFloat(rows[1][rows[0].indexOf("Price")]);
-return unitPrice * Item.Quantity;
+// Values are platform strings, so find the column with == rather than indexOf
+for (var c = 0; c < rows[0].length; c++) {
+    if (rows[0][c] == "Price") {
+        return parseFloat(rows[1][c]) * Item.Quantity;
+    }
+}
+return 0;
 ```
 
 ### File-Based Pricing
@@ -358,7 +375,7 @@ var basePrice = 0;
 // Uploaded files belong to the product's file upload attributes
 for (var i = 0; i < Item.Attributes.length; i++) {
     var attr = Item.Attributes[i];
-    if (attr.Type !== "FileUpload") {
+    if (attr.Type != "FileUpload") {
         continue;
     }
 
@@ -368,14 +385,14 @@ for (var i = 0; i < Item.Attributes.length; i++) {
     }
 
     // Price per page for PDFs
-    if (file.MimeType === "application/pdf") {
+    if (file.MimeType == "application/pdf") {
         var pageCount = file.NumberOfPages > 0 ? file.NumberOfPages : 1;
         var pricePerPage = 0.50;
         basePrice += pageCount * pricePerPage;
         debug("PDF: " + pageCount + " pages @ $" + pricePerPage + "/page");
     }
     // Price by file size for images
-    else if (file.MimeType.indexOf("image/") === 0) {
+    else if (file.MimeType.indexOf("image/") == 0) {
         var sizeInMB = file.Size / (1024 * 1024);
         var pricePerMB = 2.00;
         basePrice += sizeInMB * pricePerMB;
@@ -527,13 +544,13 @@ if (CheckoutItem.Address && CheckoutItem.Address.Country) {
     var countryCode = CheckoutItem.Address.Country.TwoLetterIsoCode;
 
     // International shipping surcharge
-    if (countryCode !== "US") {
+    if (countryCode != "US") {
         shippingSurcharge = 15.00;
         debug("International shipping to " + countryCode + " - $15 surcharge");
     }
 
     // Remote area surcharge
-    if (countryCode === "AK" || countryCode === "HI") {
+    if (countryCode == "AK" || countryCode == "HI") {
         shippingSurcharge = 10.00;
         debug("Alaska/Hawaii shipping - $10 surcharge");
     }

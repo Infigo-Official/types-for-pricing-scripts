@@ -60,9 +60,9 @@ declare interface FileInfo {
      * to apply different pricing logic based on file type.
      * 
      * @example
-     * if (fileInfo.MimeType === "application/pdf") {
+     * if (fileInfo.MimeType == "application/pdf") {
      *     return Item.Price + (fileInfo.NumberOfPages * 0.50); // $0.50 per page
-     * } else if (fileInfo.MimeType.indexOf("image/") === 0) {
+     * } else if (fileInfo.MimeType.indexOf("image/") == 0) {
      *     return Item.Price + 2.00; // $2.00 for image files
      * }
      */

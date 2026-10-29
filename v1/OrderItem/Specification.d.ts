@@ -32,7 +32,7 @@ declare interface Specification {
      * The value as entered in the admin, without translation.
      *
      * @example
-     * if (spec.DefaultValue === "350gsm") {
+     * if (spec.DefaultValue == "350gsm") {
      *     // heavy stock
      * }
      */

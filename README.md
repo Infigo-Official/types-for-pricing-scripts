@@ -59,6 +59,8 @@ Create `tsconfig.json` in your project:
 
 `"lib": ["ES5"]` makes the editor flag methods the pricing engine does not support, such as `Array.prototype.includes`.
 
+Values that come from the platform (strings, numbers, booleans, CSV cells, role names) are wrapped objects in the script engine, so `===` and `array.indexOf` never match them. Compare with `==`, use `HelperMethods.Contains(array, value)` for membership, or convert with `String(...)` / `Number(...)` first.
+
 ### 2. Write Your First Pricing Script
 
 Create `src/pricing-script.js`:
@@ -213,7 +215,7 @@ alert("Bulk discount applied", Constants.MessageArea.Basket);
 | `getGlobalFileContent(filename)` | `FileInfo` | Load global configuration files |
 | `getGlobalFileCsvContent(filename)` | `string[][]` | Load CSV data from global files |
 | `getRowsFromLookup(filename, columnNames, columnValues)` | `string[][] \| null` | Indexed lookup of matching rows in a global CSV file |
-| `ToJson(obj)` | `string` | Serialize a value to JSON for logging |
+| `ToJson(obj)` | `string` | Serialize a value to JSON. Known issue: currently returns an error JSON inside pricing scripts; use `HelperMethods.LogObject` instead |
 
 ### Session Properties
 
@@ -228,7 +230,7 @@ alert("Bulk discount applied", Constants.MessageArea.Basket);
 |--------|---------|-------------|
 | `getCheckoutAttributeValue(attributeName)` | `string` | Get checkout attribute value by name |
 | `setCheckoutAttributeValue(attributeName, value)` | `void` | Set checkout attribute value on the customer |
-| `ToJson(obj)` | `string` | Serialize a value to JSON for logging |
+| `ToJson(obj)` | `string` | Serialize a value to JSON. Known issue: currently returns an error JSON inside pricing scripts |
 
 ### Helper Methods
 
@@ -314,7 +316,7 @@ return calculatePrice();
 function calculatePrice() {
     var csvData = Item.getGlobalFileCsvContent("pricing-matrix.csv");
 
-    if (!csvData || csvData.length === 0) {
+    if (!csvData || csvData.length == 0) {
         warning("Pricing matrix not found, using default price");
         return Item.Price;
     }
@@ -325,7 +327,7 @@ function calculatePrice() {
 
     for (var i = 1; i < csvData.length; i++) {
         var row = csvData[i];
-        if (row[0] === size && row[1] === material) {
+        if (row[0] == size && row[1] == material) {
             return parseFloat(row[2]); // Price column
         }
     }
@@ -345,7 +347,7 @@ function calculatePrice() {
 
     for (var i = 0; i < Item.Attributes.length; i++) {
         var attr = Item.Attributes[i];
-        if (attr.Type !== "FileUpload") {
+        if (attr.Type != "FileUpload") {
             continue;
         }
 
@@ -356,7 +358,7 @@ function calculatePrice() {
         }
 
         // Add per-page fee for PDFs
-        if (fileInfo.MimeType === "application/pdf") {
+        if (fileInfo.MimeType == "application/pdf") {
             price += fileInfo.NumberOfPages * 0.25;
             console("Added $" + (fileInfo.NumberOfPages * 0.25).toFixed(2) + " for " + fileInfo.NumberOfPages + " pages");
         }
@@ -379,7 +381,7 @@ return calculatePrice();
 ```javascript
 // Show the note only in the basket, and a debug line only in the admin area
 alert("Bulk discount applied", Constants.MessageArea.Basket);
-debug(Item.ToJson(Item.Specifications), Constants.MessageArea.AdminArea);
+debug("Specifications: " + Item.Specifications.length, Constants.MessageArea.AdminArea);
 
 return Item.Price;
 ```
@@ -478,7 +480,8 @@ Item.setAttributeValue("custom_field", "value");
 
 ### v1.0.9
 - Added Item `ProductId`, `ProductGroupName`, `JobId`, `CanSetJobProperties`, `Specifications`, `getRowsFromLookup`, `ToJson` and the three-argument `getFileInfo`
-- Added Session `ScriptContext`, `IsTierPriceMode` and `ToJson`
+- Added Session `ScriptContext`, `IsTierPriceMode` and `ToJson` (`ToJson` currently fails inside the script sandbox; see its docs)
+- Documented that platform values must be compared with `==` (not `===`) and that `Session` is undefined under the admin Test button
 - Added `Constants.MessageArea` and the optional `location` argument of the output functions
 - Added global `setTierPrice` and `parseCsv`, and Session `getCheckoutAttributeValue` / `setCheckoutAttributeValue` (first npm release containing them)
 - Removed `Configuration.Parameters()` and the `ConfigurationInterface` type, which do not exist at runtime

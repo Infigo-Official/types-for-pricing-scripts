@@ -218,7 +218,7 @@ declare interface Attribute {
      * "TextBox", "MultilineTextbox", "Datepicker" or "FileUpload".
      *
      * @example
-     * if (attr.Type === "FileUpload") {
+     * if (attr.Type == "FileUpload") {
      *     var file = Item.getFileInfo(String(attr.Id), false);
      * }
      */

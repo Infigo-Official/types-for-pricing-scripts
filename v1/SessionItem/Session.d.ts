@@ -17,6 +17,14 @@
  * This object provides session-wide context for pricing calculations that
  * may need to consider multiple items or customer session data.
  *
+ * Session is only defined when the script runs for a customer. The admin product
+ * Test button runs without one, so guard product scripts that use it:
+ *
+ * @example
+ * if (typeof Session != "undefined") {
+ *     debug("Session context: " + Session.ScriptContext);
+ * }
+ *
  * @category Global Objects
  */
 declare interface Session {
@@ -66,7 +74,7 @@ declare interface Session {
      * 
      * @example
      * console("Customer roles: " + Session.CustomerRoles.join(", "));
-     * if (Session.CustomerRoles.indexOf("VIP") >= 0) {
+     * if (HelperMethods.Contains(Session.CustomerRoles, "VIP")) {
      *     console("VIP customer - apply special pricing");
      * }
      */
@@ -79,7 +87,7 @@ declare interface Session {
      * 
      * @example
      * console("Customer department: " + Session.Department);
-     * if (Session.Department === "Education") {
+     * if (Session.Department == "Education") {
      *     console("Educational department - apply academic discount");
      * }
      */
@@ -92,7 +100,7 @@ declare interface Session {
      *
      * @example
      * console("Customer department cost code: " + Session.DepartmentCostCode);
-     * if (Session.DepartmentCostCode === "CC-100") {
+     * if (Session.DepartmentCostCode == "CC-100") {
      *     console("Cost centre CC-100 - apply centre-specific pricing");
      * }
      */
@@ -104,7 +112,7 @@ declare interface Session {
      * Used to apply code-specific pricing or promotions at the session level.
      *
      * @example
-     * if (Session.DiscountCode === "SUMMER20") {
+     * if (Session.DiscountCode == "SUMMER20") {
      *     console("Summer discount code applied in session");
      * }
      */
@@ -114,7 +122,7 @@ declare interface Session {
      * The mode the script is running in: "Product", "CheckoutAttribute" or "LandingPageWithTierPrices".
      *
      * @example
-     * if (Session.ScriptContext === "CheckoutAttribute") {
+     * if (Session.ScriptContext == "CheckoutAttribute") {
      *     debug("Pricing a checkout attribute");
      * }
      */
@@ -133,13 +141,19 @@ declare interface Session {
     IsTierPriceMode: boolean;
 
     /**
-     * Serialize a value to an indented JSON string. Handy for logging platform objects while writing a script.
+     * Serialize a value to an indented JSON string.
      * Returns "null" for null, and a JSON object with an `error` property if serialization fails.
+     *
+     * **Known issue:** inside pricing scripts this currently fails for every value and returns
+     * `{"error": "Serialization failed: ... ReflectionPermission ..."}`, because the script sandbox
+     * blocks the serializer. Until that is fixed, log values with {@link HelperMethods.LogObject}
+     * or string concatenation instead.
      * @param obj - The value to serialize
      * @returns JSON text
      *
      * @example
-     * console("Discount code: " + Session.ToJson(Session.DiscountCode));
+     * // Works today: log the value directly
+     * console("Discount code: " + Session.DiscountCode);
      */
     ToJson(obj: any): string;
 
@@ -154,7 +168,7 @@ declare interface Session {
      *
      * @example
      * var deliveryType = Session.getCheckoutAttributeValue("Delivery Type");
-     * if (deliveryType === "Express") {
+     * if (deliveryType == "Express") {
      *     console("Express delivery selected - apply surcharge");
      * }
      */
@@ -179,7 +193,7 @@ declare interface Session {
      * @param value - Value to set
      *
      * @example
-     * if (Session.CustomerRoles.indexOf("Wholesale") >= 0) {
+     * if (HelperMethods.Contains(Session.CustomerRoles, "Wholesale")) {
      *     Session.setCheckoutAttributeValue("Delivery Type", "Pallet");
      * }
      *
@@ -216,12 +230,12 @@ declare interface Session {
  * }
  * 
  * // Apply role-based session pricing
- * if (Session.CustomerRoles.indexOf("Wholesale") >= 0) {
+ * if (HelperMethods.Contains(Session.CustomerRoles, "Wholesale")) {
  *     console("Wholesale customer session - apply wholesale pricing");
  * }
  * 
  * // Department-specific session logic
- * if (Session.Department === "Marketing") {
+ * if (Session.Department == "Marketing") {
  *     console("Marketing department session - apply marketing discounts");
  * }
  * 
