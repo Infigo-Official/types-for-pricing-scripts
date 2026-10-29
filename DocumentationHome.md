@@ -13,6 +13,7 @@ The item management system provides access to all product-related data and funct
 - **AttributeValue**: Individual values within attributes, including tier-based pricing adjustments that can vary based on quantity or customer roles.
 - **Tier**: Quantity-based pricing tiers with customer role support, allowing different pricing for different customer types.
 - **Version**: Job versioning information including quantities and custom names, useful for tracking pricing changes across job iterations.
+- **Specification**: The product's specification attributes (for example paper weight), each with a name and value.
 
 ### File Handling
 
@@ -25,8 +26,9 @@ The file handling system provides comprehensive information about uploaded files
 
 The system configuration provides access to script settings, parameters, and output functions that control behavior and functionality.
 
-- **Configuration**: Provides access to script configuration settings and parameters that control the behavior of the pricing script.
-- **Output Functions**: Allow scripts to communicate with users and provide feedback about pricing calculations and decisions.
+- **Configuration**: Provides access to the script's configuration through `Configuration.ScriptConfig()`, so one script can be reused with different settings.
+- **Output Functions**: Allow scripts to communicate with users and provide feedback about pricing calculations and decisions. An optional second argument from `Constants.MessageArea` chooses where the message is shown, such as only in the basket.
+- **Global Functions**: `parseCsv` parses CSV text, and `setTierPrice` fills the product page tier price table.
 
 ### Helper Methods
 
@@ -42,13 +44,49 @@ Helper methods provide utility functions for common pricing calculations and dat
   - **IsObject/IsArray**: Type checking utilities for robust script development
   - **MergeObject**: Deep merge objects with conflict resolution for combining pricing data
 
+### Session and Checkout
 
+- **Session**: The customer's session (email, roles, department, cart items) and the checkout attribute methods `getCheckoutAttributeValue` / `setCheckoutAttributeValue`. Available in product and checkout attribute scripts whenever there is a customer. The admin product Test button runs without a customer, so `Session` is undefined there; guard with `if (typeof Session !== "undefined")`.
+- **CheckoutItem**: The checkout context, with the customer, address and items, for scripts attached to checkout attributes.
+
+## Writing Scripts in an Editor
+
+Scripts run on an ES5 JavaScript engine. Write plain ES5 (`var`, `function`, `indexOf`); `let`, `const`, arrow functions, template literals, `includes` and `startsWith` fail at runtime. To get IntelliSense and type checking in your editor, install the package and use this `tsconfig.json`; the `.js` files can then be pasted into the admin script editor unchanged:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "lib": ["ES5"],
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "types": ["@infigo-official/types-for-pricing-script"]
+  },
+  "include": ["src/**/*"]
+}
+```
+
+Scripts return the price from the top level, which TypeScript reports as an error. Put `// @ts-ignore` on the line above that `return`.
+
+### Comparing Platform Values
+
+Strings, numbers and booleans that come from the platform (`Item.ScriptContext`, `Item.Price`, attribute values, CSV cells, role names) are wrapped objects in the script engine, so strict comparisons never match them:
+
+| Instead of | Use |
+|---|---|
+| `Item.ScriptContext === "Product"` | `Item.ScriptContext == "Product"` |
+| `Item.CustomerRoles.indexOf("VIP") >= 0` | `HelperMethods.Contains(Item.CustomerRoles, "VIP")` |
+| `rows[0].indexOf("Price")` | a loop comparing each `rows[0][c] == "Price"` |
+
+String methods such as `indexOf` and `toLowerCase` work on platform strings. To get a plain JavaScript value, convert it with `String(...)` or `Number(...)`.
 
 ## Scripting Principles
 
 ### Object Access and Data Flow
 
-When working with pricing script objects, all data is read-only and accessed through the provided interfaces. The script receives the current state of the pricing context and returns the calculated price or pricing adjustments.
+When working with pricing script objects, data is read-only and accessed through the provided interfaces; the exceptions are `Item.setAttributeValue`, `Session.setCheckoutAttributeValue` and `setTierPrice`. The script receives the current state of the pricing context and returns the calculated price or pricing adjustments.
 
 Updates to the pricing system are handled through the return value of the script, which can include price modifications, attribute adjustments, and other pricing-related changes.
 
@@ -186,12 +224,12 @@ Using built-in tier pricing with HelperMethods:
 ```javascript
 // Define pricing tiers
 var tiers = [
-    { Quantity: 1, Price: 5.00 },
-    { Quantity: 50, Price: 4.00 },
-    { Quantity: 100, Price: 3.50 },
-    { Quantity: 250, Price: 3.00 },
-    { Quantity: 500, Price: 2.50 },
-    { Quantity: 1000, Price: 2.00 }
+    { Quantity: 1, Price: 5.00, CustomerRole: "" },
+    { Quantity: 50, Price: 4.00, CustomerRole: "" },
+    { Quantity: 100, Price: 3.50, CustomerRole: "" },
+    { Quantity: 250, Price: 3.00, CustomerRole: "" },
+    { Quantity: 500, Price: 2.50, CustomerRole: "" },
+    { Quantity: 1000, Price: 2.00, CustomerRole: "" }
 ];
 
 // Find the appropriate tier for the current quantity
@@ -210,10 +248,10 @@ Interpolated pricing for smooth transitions:
 
 ```javascript
 var tiers = [
-    { Quantity: 1, Price: 10.00 },
-    { Quantity: 100, Price: 8.00 },
-    { Quantity: 500, Price: 6.00 },
-    { Quantity: 1000, Price: 4.00 }
+    { Quantity: 1, Price: 10.00, CustomerRole: "" },
+    { Quantity: 100, Price: 8.00, CustomerRole: "" },
+    { Quantity: 500, Price: 6.00, CustomerRole: "" },
+    { Quantity: 1000, Price: 4.00, CustomerRole: "" }
 ];
 
 // Get interpolated price between tiers
@@ -256,11 +294,11 @@ Role-based tier pricing:
 ```javascript
 // Define tiers with customer role support
 var tiers = [
-    { Quantity: 1, Price: 10.00 },
+    { Quantity: 1, Price: 10.00, CustomerRole: "" },
     { Quantity: 50, Price: 8.00, CustomerRole: "Registered" },
     { Quantity: 50, Price: 7.00, CustomerRole: "Wholesale" },
     { Quantity: 50, Price: 6.00, CustomerRole: "VIP" },
-    { Quantity: 100, Price: 6.00 },
+    { Quantity: 100, Price: 6.00, CustomerRole: "" },
     { Quantity: 100, Price: 5.00, CustomerRole: "Wholesale" },
     { Quantity: 100, Price: 4.00, CustomerRole: "VIP" }
 ];
@@ -305,32 +343,60 @@ debug("Unit: $" + unitPrice + ", Setup: $" + setupFee + ", Total: $" + totalPric
 return totalPrice;
 ```
 
+Look up a price row in a large CSV file from Global Data by attribute values:
+
+```javascript
+// prices.csv has the columns Material, Size, Price
+var rows = Item.getRowsFromLookup("prices.csv", ["Material", "Size"],
+    [Item.getAttributeValue("Material"), Item.getAttributeValue("Size")]);
+
+// rows[0] is the header row; matches start at rows[1]
+if (!rows || rows.length < 2) {
+    error("No price found for this combination", Constants.MessageArea.ProductDetails);
+    return 0;
+}
+
+// Values are platform strings, so find the column with == rather than indexOf
+for (var c = 0; c < rows[0].length; c++) {
+    if (rows[0][c] == "Price") {
+        return parseFloat(rows[1][c]) * Item.Quantity;
+    }
+}
+return 0;
+```
+
 ### File-Based Pricing
 
 Calculate pricing based on uploaded file properties:
 
 ```javascript
 var basePrice = 0;
-var files = Item.GetUploadedFiles();
 
-if (files && files.length > 0) {
-    for (var i = 0; i < files.length; i++) {
-        var file = files[i];
+// Uploaded files belong to the product's file upload attributes
+for (var i = 0; i < Item.Attributes.length; i++) {
+    var attr = Item.Attributes[i];
+    if (attr.Type != "FileUpload") {
+        continue;
+    }
 
-        // Price per page for PDFs
-        if (file.MimeType === "application/pdf") {
-            var pageCount = file.PageCount || 1;
-            var pricePerPage = 0.50;
-            basePrice += pageCount * pricePerPage;
-            debug("PDF: " + pageCount + " pages @ $" + pricePerPage + "/page");
-        }
-        // Price by file size for images
-        else if (file.MimeType.indexOf("image/") === 0) {
-            var sizeInMB = file.Size / (1024 * 1024);
-            var pricePerMB = 2.00;
-            basePrice += sizeInMB * pricePerMB;
-            debug("Image: " + sizeInMB.toFixed(2) + "MB @ $" + pricePerMB + "/MB");
-        }
+    var file = Item.getFileInfo(String(attr.Id), false);
+    if (!file) {
+        continue; // nothing uploaded for this attribute
+    }
+
+    // Price per page for PDFs
+    if (file.MimeType == "application/pdf") {
+        var pageCount = file.NumberOfPages > 0 ? file.NumberOfPages : 1;
+        var pricePerPage = 0.50;
+        basePrice += pageCount * pricePerPage;
+        debug("PDF: " + pageCount + " pages @ $" + pricePerPage + "/page");
+    }
+    // Price by file size for images
+    else if (file.MimeType.indexOf("image/") == 0) {
+        var sizeInMB = file.Size / (1024 * 1024);
+        var pricePerMB = 2.00;
+        basePrice += sizeInMB * pricePerMB;
+        debug("Image: " + sizeInMB.toFixed(2) + "MB @ $" + pricePerMB + "/MB");
     }
 }
 
@@ -448,15 +514,17 @@ Manual attribute iteration:
 var basePrice = Item.Price;
 var adjustments = 0;
 
-// Iterate through all attributes
+// Item.Attributes holds one entry per selected value
 for (var i = 0; i < Item.Attributes.length; i++) {
     var attr = Item.Attributes[i];
 
-    // Check if attribute has a selected value
-    if (attr.SelectedValue) {
-        adjustments += attr.SelectedValue.PriceAdjustment || 0;
-        debug(attr.Name + ": " + attr.SelectedValue.Name +
-              " (+$" + (attr.SelectedValue.PriceAdjustment || 0) + ")");
+    // Text and file attributes have no options (empty Values) and no price adjustment
+    if (attr.Values.length > 0) {
+        var adjustment = attr.PriceAdjustmentIsPercentage
+            ? basePrice * attr.PriceAdjustment / 100
+            : attr.PriceAdjustment;
+        adjustments += adjustment;
+        debug(attr.Key + ": " + attr.Value + " (+$" + adjustment + ")");
     }
 }
 
@@ -476,13 +544,13 @@ if (CheckoutItem.Address && CheckoutItem.Address.Country) {
     var countryCode = CheckoutItem.Address.Country.TwoLetterIsoCode;
 
     // International shipping surcharge
-    if (countryCode !== "US") {
+    if (countryCode != "US") {
         shippingSurcharge = 15.00;
         debug("International shipping to " + countryCode + " - $15 surcharge");
     }
 
     // Remote area surcharge
-    if (countryCode === "AK" || countryCode === "HI") {
+    if (countryCode == "AK" || countryCode == "HI") {
         shippingSurcharge = 10.00;
         debug("Alaska/Hawaii shipping - $10 surcharge");
     }

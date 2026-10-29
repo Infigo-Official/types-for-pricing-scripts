@@ -60,9 +60,9 @@ declare interface FileInfo {
      * to apply different pricing logic based on file type.
      * 
      * @example
-     * if (fileInfo.MimeType === "application/pdf") {
+     * if (fileInfo.MimeType == "application/pdf") {
      *     return Item.Price + (fileInfo.NumberOfPages * 0.50); // $0.50 per page
-     * } else if (fileInfo.MimeType.startsWith("image/")) {
+     * } else if (fileInfo.MimeType.indexOf("image/") == 0) {
      *     return Item.Price + 2.00; // $2.00 for image files
      * }
      */
@@ -135,11 +135,12 @@ declare interface FileInfo {
 
     /**
      * The parsed CSV content of the file as a 2D array of strings (rows by columns).
-     * Only set when the file is a CSV/text file read with the readContent flag enabled;
-     * the first row typically contains the column headers. Absent for non-CSV files.
+     * For uploaded files, only set when the file is a CSV/text file read with both the readContent
+     * and getTextFileContent flags enabled; the first row typically contains the column headers.
+     * Absent for non-CSV files.
      *
      * @example
-     * var fileInfo = Item.getFileInfo("dataFile", true);
+     * var fileInfo = Item.getFileInfo(String(attr.Id), true, true);
      * if (fileInfo && fileInfo.CsvContent) {
      *     var headers = fileInfo.CsvContent[0];
      *     for (var i = 1; i < fileInfo.CsvContent.length; i++) {

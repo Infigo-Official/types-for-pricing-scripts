@@ -157,13 +157,26 @@ declare interface Item {
     CanSetWeight: boolean;
 
     /**
+     * Indicates whether the item has a job behind it (an editor or upload job) whose properties,
+     * such as the weight, can be set by the script. False when there is no job yet,
+     * for example when the price is calculated on the product page before the customer has started a job.
+     * {@link Item.CanSetWeight} is the older name for the same check.
+     *
+     * @example
+     * if (Item.CanSetJobProperties) {
+     *     debug("Pricing job " + Item.JobId);
+     * }
+     */
+    CanSetJobProperties: boolean;
+
+    /**
      * The Stock Keeping Unit (SKU) of the product variant.
      * This is the unique identifier for the product variant and is used
      * for inventory management and order processing.
      *
      * @example
      * // Apply SKU-specific pricing rules
-     * if (Item.Sku.startsWith("PREMIUM-")) {
+     * if (Item.Sku && Item.Sku.indexOf("PREMIUM-") == 0) {
      *     debug("Premium product: " + Item.Sku);
      *     return Item.Price * 1.10; // 10% premium markup
      * }
@@ -179,7 +192,7 @@ declare interface Item {
      * // Log the configured SKU for debugging
      * debug("Base SKU: " + Item.Sku);
      * debug("Configured SKU: " + Item.ActualSku);
-     * if (Item.ActualSku !== Item.Sku) {
+     * if (Item.ActualSku != Item.Sku) {
      *     debug("Product has attribute variations");
      * }
      */
@@ -239,12 +252,33 @@ declare interface Item {
     ProductName: string;
 
     /**
+     * The numeric ID of the product.
+     * Useful when one script is shared by several products and needs product-specific rules.
+     *
+     * @example
+     * if (Item.ProductId == 1234) {
+     *     return Item.Price * Item.Quantity * 0.9; // 10% off this product only
+     * }
+     */
+    ProductId: number;
+
+    /**
+     * The name of the product group the product belongs to, or null when it is not in a group.
+     *
+     * @example
+     * if (Item.ProductGroupName == "Business Cards") {
+     *     debug("Business card pricing applies");
+     * }
+     */
+    ProductGroupName: string | null;
+
+    /**
      * Array of category names that this product belongs to.
      * Categories are used for product organization, filtering, and
      * category-specific pricing rules.
      * 
      * @example
-     * if (Item.Categories.includes("Premium")) {
+     * if (HelperMethods.Contains(Item.Categories, "Premium")) {
      *     return Item.Price * 1.1; // 10% premium markup
      * }
      */
@@ -256,7 +290,7 @@ declare interface Item {
      * and tag-based pricing rules.
      * 
      * @example
-     * if (Item.Tags.includes("Featured")) {
+     * if (HelperMethods.Contains(Item.Tags, "Featured")) {
      *     return Item.Price * 1.05; // 5% featured product markup
      * }
      */
@@ -335,6 +369,17 @@ declare interface Item {
     NumberOfRecords: number;
 
     /**
+     * The ID of the job behind the item, or null when there is no job yet
+     * (see {@link Item.CanSetJobProperties}).
+     *
+     * @example
+     * if (Item.JobId) {
+     *     console("Job: " + Item.JobId);
+     * }
+     */
+    JobId: string | null;
+
+    /**
      * Array of pricing tiers with Price, Quantity, and CustomerRole
      *
      * @example
@@ -388,11 +433,26 @@ declare interface Item {
     Attributes: Attribute[];
 
     /**
+     * Array of the product's specification attributes, each with a Key, Value and DefaultValue.
+     * Value is localized to the customer's language; DefaultValue is the untranslated value,
+     * which is the safer one to compare against in scripts.
+     *
+     * @example
+     * for (var i = 0; i < Item.Specifications.length; i++) {
+     *     var spec = Item.Specifications[i];
+     *     if (spec.Key == "Paper Weight" && spec.DefaultValue == "350gsm") {
+     *         return Item.Price * Item.Quantity + 15.00; // heavy stock surcharge
+     *     }
+     * }
+     */
+    Specifications: Specification[];
+
+    /**
      * User email
      *
      * @example
      * // Apply corporate discount for company emails
-     * if (Item.Email.endsWith("@mycompany.com")) {
+     * if (/@mycompany\.com$/i.test(Item.Email)) {
      *     debug("Corporate customer: " + Item.Email);
      *     return Item.Price * 0.85; // 15% corporate discount
      * }
@@ -404,10 +464,10 @@ declare interface Item {
      *
      * @example
      * // Check for wholesale pricing
-     * if (Item.CustomerRoles.indexOf("Wholesale") >= 0) {
+     * if (HelperMethods.Contains(Item.CustomerRoles, "Wholesale")) {
      *     debug("Wholesale customer detected");
      *     return Item.Price * 0.70; // 30% wholesale discount
-     * } else if (Item.CustomerRoles.indexOf("VIP") >= 0) {
+     * } else if (HelperMethods.Contains(Item.CustomerRoles, "VIP")) {
      *     return Item.Price * 0.90; // 10% VIP discount
      * }
      */
@@ -418,10 +478,10 @@ declare interface Item {
      *
      * @example
      * // Apply department-specific pricing
-     * if (Item.Department === "Marketing") {
+     * if (Item.Department == "Marketing") {
      *     debug("Marketing department order");
      *     return Item.Price * 0.80; // 20% marketing discount
-     * } else if (Item.Department === "Sales") {
+     * } else if (Item.Department == "Sales") {
      *     return Item.Price * 0.75; // 25% sales discount
      * }
      */
@@ -434,7 +494,7 @@ declare interface Item {
      *
      * @example
      * // Apply cost-centre-specific pricing
-     * if (Item.DepartmentCostCode === "CC-100") {
+     * if (Item.DepartmentCostCode == "CC-100") {
      *     debug("Cost centre CC-100 order");
      *     return Item.Price * 0.90; // 10% discount for cost centre CC-100
      * }
@@ -475,7 +535,7 @@ declare interface Item {
      *
      * @example
      * // Apply setup fee only to first item
-     * if (Item.OrderItemIndex === 0) {
+     * if (Item.OrderItemIndex == 0) {
      *     debug("First item - adding setup fee");
      *     return Item.Price + 15.00;
      * }
@@ -508,10 +568,10 @@ declare interface Item {
      *
      * @example
      * // Apply special discount for specific codes
-     * if (Item.DiscountCode === "SUMMER20") {
+     * if (Item.DiscountCode == "SUMMER20") {
      *     debug("Summer sale discount applied");
      *     return Item.Price * 0.80; // 20% off
-     * } else if (Item.DiscountCode === "VIP50") {
+     * } else if (Item.DiscountCode == "VIP50") {
      *     return Item.Price * 0.50; // 50% off
      * }
      */
@@ -574,11 +634,11 @@ declare interface Item {
      * The mode the script is running in: "Product", "CheckoutAttribute" or "LandingPageWithTierPrices".
      *
      * @example
-     * if (Item.ScriptContext === "CheckoutAttribute") {
+     * if (Item.ScriptContext == "CheckoutAttribute") {
      *     debug("Pricing a checkout attribute");
      * }
      */
-    ScriptContext: string;
+    ScriptContext: "Product" | "CheckoutAttribute" | "LandingPageWithTierPrices";
 
     /**
      * True when the script is run to build the product page tier price table
@@ -594,12 +654,47 @@ declare interface Item {
     IsTierPriceMode: boolean;
 
     /**
-     * Get file information for attached files
-     * @param attributeId - ID of the attribute
-     * @param readContent - Whether to read file content
-     * @returns FileInfo object
+     * Get file information for the file uploaded to a file upload attribute.
+     * Returns null when the attribute has no uploaded file.
+     *
+     * For text and CSV files, `readContent` counts the lines into `NumberOfRecords`;
+     * the file's lines are not returned. Use the three-argument overload to get them.
+     * @param attributeId - ID of the file upload attribute, as a string (`String(attr.Id)`)
+     * @param readContent - Whether to read text and CSV files to count their records
+     * @returns FileInfo object, or null
+     *
+     * @example
+     * for (var i = 0; i < Item.Attributes.length; i++) {
+     *     var attr = Item.Attributes[i];
+     *     if (attr.Type == "FileUpload") {
+     *         var file = Item.getFileInfo(String(attr.Id), false);
+     *         if (file && file.NumberOfPages > 0) {
+     *             debug(attr.Prompt + ": " + file.NumberOfPages + " pages");
+     *         }
+     *     }
+     * }
      */
-    getFileInfo(attributeId: string, readContent: boolean): FileInfo;
+    getFileInfo(attributeId: string, readContent: boolean): FileInfo | null;
+
+    /**
+     * Get file information for the file uploaded to a file upload attribute,
+     * optionally including the content of text and CSV files.
+     * Returns null when the attribute has no uploaded file.
+     *
+     * With `readContent` and `getTextFileContent` both true, text and CSV files also fill
+     * `Content` (the lines) and, for CSV, `CsvContent` (rows by columns).
+     * @param attributeId - ID of the file upload attribute, as a string (`String(attr.Id)`)
+     * @param readContent - Whether to read text and CSV files
+     * @param getTextFileContent - Whether to return the file's lines as well as the record count
+     * @returns FileInfo object, or null
+     *
+     * @example
+     * var file = Item.getFileInfo(String(attr.Id), true, true);
+     * if (file && file.CsvContent) {
+     *     debug("Uploaded list has " + (file.CsvContent.length - 1) + " addresses");
+     * }
+     */
+    getFileInfo(attributeId: string, readContent: boolean, getTextFileContent: boolean): FileInfo | null;
 
     /**
      * Shortcut method to retrieve an attribute value by name
@@ -687,6 +782,55 @@ declare interface Item {
      * }
      */
     getGlobalFileCsvContent(filename: string): string[][] | null;
+
+    /**
+     * Look up rows in a CSV file from Global Data by the values of one or more columns.
+     * The file is indexed by the given columns on first use and the index is cached,
+     * so repeated lookups in large price tables stay fast.
+     *
+     * The result's first row is the header row; the matching rows follow it.
+     * All values are strings. Returns null when the file does not exist, or when the two arrays
+     * are empty or differ in length.
+     * @param filename - Name of the CSV file in Global Data
+     * @param indexedColumnNames - Header names of the columns to match on; order matters
+     * @param columnValues - Values to match, in the same order as `indexedColumnNames`
+     * @returns Header row followed by the matching rows, or null
+     *
+     * @example
+     * var rows = Item.getRowsFromLookup("prices.csv", ["Material", "Size"],
+     *     [Item.getAttributeValue("Material"), Item.getAttributeValue("Size")]);
+     * if (rows && rows.length > 1) {
+     *     // Values are platform strings, so find the column with == rather than indexOf
+ *     var priceColumn = 0;
+ *     for (var c = 0; c < rows[0].length; c++) {
+ *         if (rows[0][c] == "Price") {
+ *             priceColumn = c;
+ *         }
+ *     }
+     *     return parseFloat(rows[1][priceColumn]) * Item.Quantity;
+     * }
+     * error("No price found for this combination");
+     */
+    getRowsFromLookup(filename: string, indexedColumnNames: string[], columnValues: string[]): string[][] | null;
+
+    /**
+     * Serialize a value to an indented JSON string.
+     * Returns "null" for null, and a JSON object with an `error` property if serialization fails.
+     *
+     * **Known issue:** inside pricing scripts this currently fails for every value and returns
+     * `{"error": "Serialization failed: ... ReflectionPermission ..."}`, because the script sandbox
+     * blocks the serializer. Until that is fixed, log values with {@link HelperMethods.LogObject}
+     * or string concatenation instead.
+     * @param obj - The value to serialize
+     * @returns JSON text
+     *
+     * @example
+     * // Works today: log the fields yourself
+     * for (var i = 0; i < Item.Specifications.length; i++) {
+     *     console(Item.Specifications[i].Key + " = " + Item.Specifications[i].Value);
+     * }
+     */
+    ToJson(obj: any): string;
 }
 
 /**
@@ -712,13 +856,13 @@ declare interface Item {
  * }
  * 
  * // Get file information
- * var fileInfo = Item.getFileInfo("fileAttributeId", true);
- * if (fileInfo.NumberOfPages > 0) {
+ * var fileInfo = Item.getFileInfo("123", false); // "123" is the file upload attribute's Id
+ * if (fileInfo && fileInfo.NumberOfPages > 0) {
  *     console("File has " + fileInfo.NumberOfPages + " pages");
  * }
  * 
  * // Access customer information
- * if (Item.CustomerRoles.indexOf("Registered") >= 0) {
+ * if (HelperMethods.Contains(Item.CustomerRoles, "Registered")) {
  *     // Apply Registered pricing logic
  * }
  * 
@@ -743,14 +887,14 @@ declare interface Item {
  *     }
  *     
  *     // Check for special customer pricing
- *     if (Item.CustomerRoles.indexOf("Wholesale") >= 0) {
+ *     if (HelperMethods.Contains(Item.CustomerRoles, "Wholesale")) {
  *         finalPrice *= 0.85; // 15% wholesale discount
  *         console("Applied wholesale pricing");
  *     }
  *
  *     // Apply attribute-based adjustments
  *     var colorAttr = Item.getAttributeValue("Color");
- *     if (colorAttr === "Premium Gold") {
+ *     if (colorAttr == "Premium Gold") {
  *         finalPrice += 25.00; // Premium color surcharge
  *         console("Added premium color surcharge: $25.00");
  *     }
@@ -774,17 +918,11 @@ declare interface Item {
  * }
  * 
  * @example
- * // Working with product versions and configurations
- * if (Item.Versions && Item.Versions.length > 0) {
+ * // Working with job versions
+ * if (Item.IsVersion && Item.Versions.length > 0) {
  *     for (var v = 0; v < Item.Versions.length; v++) {
  *         var version = Item.Versions[v];
- *         console("Version " + (v + 1) + ": " + version.Data.length + " data entries");
- *         
- *         // Process version-specific data
- *         for (var d = 0; d < version.Data.length; d++) {
- *             var data = version.Data[d];
- *             console("  Data entry: " + data.Key + " = " + data.Value);
- *         }
+ *         console("Version " + (v + 1) + ": " + version.CustomName + " x " + version.Quantity);
  *     }
  * }
  *
@@ -803,13 +941,13 @@ declare interface Item {
  *     
  *     // Find price column
  *     for (var h = 0; h < headers.length; h++) {
- *         if (headers[h] === "Price") {
+ *         if (headers[h] == "Price") {
  *             priceColumnIndex = h;
  *             break;
  *         }
  *     }
  *     
- *     if (priceColumnIndex === -1) {
+ *     if (priceColumnIndex == -1) {
  *         console("Price column not found in CSV");
  *         return Item.Price;
  *     }
@@ -820,11 +958,11 @@ declare interface Item {
  *         
  *         for (var col = 0; col < headers.length; col++) {
  *             var columnName = headers[col];
- *             if (columnName !== "Price" && columnName !== "Setup") {
+ *             if (columnName != "Price" && columnName != "Setup") {
  *                 var csvValue = csvData[row][col];
  *                 var attrValue = Item.getAttributeValue(columnName);
  *                 
- *                 if (csvValue && csvValue !== attrValue) {
+ *                 if (csvValue && csvValue != attrValue) {
  *                     isMatch = false;
  *                     break;
  *                 }
@@ -894,7 +1032,7 @@ declare interface Item {
  *         console("Customer Roles: " + Item.CustomerRoles.join(", "));
  *         
  *         // Check for guest users
- *         if (Item.CustomerRoles.length === 1 && Item.CustomerRoles[0] === "Guests") {
+ *         if (Item.CustomerRoles.length == 1 && Item.CustomerRoles[0] == "Guests") {
  *             console("Guest user detected - returning zero price");
  *             return 0;
  *         }
@@ -959,9 +1097,9 @@ declare interface Item {
  *             
  *             // Find column indices
  *             for (var h = 0; h < headers.length; h++) {
- *                 if (headers[h] === defaultConfig.priceColumnName) {
+ *                 if (headers[h] == defaultConfig.priceColumnName) {
  *                     priceColumnIndex = h;
- *                 } else if (headers[h] === defaultConfig.setupCostColumnName) {
+ *                 } else if (headers[h] == defaultConfig.setupCostColumnName) {
  *                     setupColumnIndex = h;
  *                 }
  *             }
@@ -972,10 +1110,15 @@ declare interface Item {
  *                 
  *                 // Check SKU match if SKU column exists
  *                 if (defaultConfig.skuColumnName) {
- *                     var skuColumnIndex = headers.indexOf(defaultConfig.skuColumnName);
+ *                     var skuColumnIndex = -1;
+ *                     for (var sc = 0; sc < headers.length; sc++) {
+ *                         if (headers[sc] == defaultConfig.skuColumnName) {
+ *                             skuColumnIndex = sc;
+ *                         }
+ *                     }
  *                     if (skuColumnIndex >= 0) {
  *                         var csvSku = csvData[row][skuColumnIndex];
- *                         if (csvSku && csvSku !== Item.ActualSku) {
+ *                         if (csvSku && csvSku != Item.ActualSku) {
  *                             isMatch = false;
  *                             continue;
  *                         }
@@ -985,14 +1128,14 @@ declare interface Item {
  *                 // Check attribute matches
  *                 for (var col = 0; col < headers.length; col++) {
  *                     var columnName = headers[col];
- *                     if (columnName !== defaultConfig.priceColumnName && 
- *                         columnName !== defaultConfig.setupCostColumnName &&
- *                         columnName !== defaultConfig.skuColumnName) {
+ *                     if (columnName != defaultConfig.priceColumnName && 
+ *                         columnName != defaultConfig.setupCostColumnName &&
+ *                         columnName != defaultConfig.skuColumnName) {
  *                         
  *                         var csvValue = csvData[row][col];
  *                         var attrValue = Item.getAttributeValue(columnName);
  *                         
- *                         if (csvValue && csvValue !== attrValue) {
+ *                         if (csvValue && csvValue != attrValue) {
  *                             isMatch = false;
  *                             break;
  *                         }
@@ -1032,12 +1175,12 @@ declare interface Item {
  *                   " (Required: " + attr.IsRequired + ", Adjustment: $" + attr.PriceAdjustment + ")");
  *             
  *             // Apply attribute price adjustments
- *             if (attr.PriceAdjustment && attr.PriceAdjustment !== 0) {
+ *             if (attr.PriceAdjustment && attr.PriceAdjustment != 0) {
  *                 totalAttributeAdjustment += attr.PriceAdjustment;
  *             }
  *             
  *             // Special handling for premium attributes
- *             if (attr.Key === "Material" && attr.Value === "Premium") {
+ *             if (attr.Key == "Material" && attr.Value == "Premium") {
  *                 var premiumSurcharge = 15.00;
  *                 totalAttributeAdjustment += premiumSurcharge;
  *                 console("Applied premium material surcharge: $" + premiumSurcharge);
@@ -1056,7 +1199,7 @@ declare interface Item {
  *             
  *             for (var c = 0; c < Item.CartItems.length; c++) {
  *                 var cartItem = Item.CartItems[c];
- *                 if (cartItem.ProductName === Item.ProductName && c !== Item.CartItemIndex) {
+ *                 if (cartItem.ProductName == Item.ProductName && c != Item.CartItemIndex) {
  *                     totalQuantity += cartItem.Quantity;
  *                     console("Added quantity from matching cart item: " + cartItem.Quantity);
  *                 }
@@ -1082,21 +1225,21 @@ declare interface Item {
  *         }
  *         
  *         // 10. Role-based Discounts
- *         if (Item.CustomerRoles.indexOf("Wholesale") >= 0) {
+ *         if (HelperMethods.Contains(Item.CustomerRoles, "Wholesale")) {
  *             finalPrice *= 0.85; // 15% wholesale discount
  *             console("Applied wholesale discount: 15%");
- *         } else if (Item.CustomerRoles.indexOf("Premium") >= 0) {
+ *         } else if (HelperMethods.Contains(Item.CustomerRoles, "Premium")) {
  *             finalPrice *= 0.90; // 10% premium customer discount
  *             console("Applied premium customer discount: 10%");
  *         }
  *         
  *         // 11. Category and Tag-based Adjustments
- *         if (Item.Categories.indexOf("Urgent") >= 0) {
+ *         if (HelperMethods.Contains(Item.Categories, "Urgent")) {
  *             finalPrice *= 1.25; // 25% rush charge
  *             console("Applied rush charge for Urgent category: 25%");
  *         }
  *         
- *         if (Item.Tags.indexOf("Featured") >= 0) {
+ *         if (HelperMethods.Contains(Item.Tags, "Featured")) {
  *             finalPrice *= 1.05; // 5% featured product markup
  *             console("Applied featured product markup: 5%");
  *         }

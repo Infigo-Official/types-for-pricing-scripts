@@ -2,7 +2,7 @@
 
 Type definitions for the Infigo Pricing Script scripting interface.
 
-![Version](https://img.shields.io/badge/version-1.0.3-blue)
+![Version](https://img.shields.io/badge/version-1.0.9-blue)
 ![TypeScript](https://img.shields.io/badge/typescript-4.9.5-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![npm](https://img.shields.io/npm/v/@infigo-official/types-for-pricing-script)
@@ -36,6 +36,8 @@ npm i @infigo-official/types-for-pricing-script
 
 ## Quick Start
 
+Pricing scripts run on an ES5 JavaScript engine, so write them as plain ES5 JavaScript (`var`, `function`, `indexOf`; no `let`/`const`, arrow functions, template literals, `includes` or `startsWith`). The setup below type-checks your JavaScript against these definitions, and the file can be pasted into the admin script editor unchanged.
+
 ### 1. Create a TypeScript Configuration
 
 Create `tsconfig.json` in your project:
@@ -44,53 +46,60 @@ Create `tsconfig.json` in your project:
 {
   "compilerOptions": {
     "target": "ES5",
-    "lib": ["ES6"],
-    "module": "CommonJS",
+    "lib": ["ES5"],
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
     "strict": true,
-    "esModuleInterop": true
+    "types": ["@infigo-official/types-for-pricing-script"]
   },
   "include": ["src/**/*"]
 }
 ```
 
+`"lib": ["ES5"]` makes the editor flag methods the pricing engine does not support, such as `Array.prototype.includes`.
+
+Values that come from the platform (strings, numbers, booleans, CSV cells, role names) are wrapped objects in the script engine, so `===` and `array.indexOf` never match them. Compare with `==`, use `HelperMethods.Contains(array, value)` for membership, or convert with `String(...)` / `Number(...)` first.
+
 ### 2. Write Your First Pricing Script
 
-Create `src/pricing-script.ts`:
+Create `src/pricing-script.js`:
 
-```typescript
+```javascript
 // Basic pricing script example
-function calculatePrice(): number {
+function calculatePrice() {
     // Start with the base price
-    let price = Item.Price;
+    var price = Item.Price;
 
     // Apply tier pricing if available
-    if (Item.PricingTiers.length > 0) {
-        const tier = HelperMethods.FindTier(Item.Quantity, Item.PricingTiers);
-        if (tier) {
-            price = tier.Price;
-        }
+    var tier = HelperMethods.FindTier(Item.Quantity, Item.PricingTiers);
+    if (tier) {
+        price = tier.Price;
     }
 
     // Add attribute adjustments
     price += HelperMethods.GetAttributePriceAdjustment(Item.Quantity);
 
     // Log the final price
-    console(`Final price: $${price.toFixed(2)}`);
+    console("Final price: $" + price.toFixed(2));
 
     return price;
 }
 
-// Return the calculated price
+// Pricing scripts return the price from the top level, which TypeScript does not allow,
+// so the next line silences that one check.
+// @ts-ignore
 return calculatePrice();
 ```
 
 ### 3. Get IntelliSense
 
 Your IDE will now provide:
-- Autocomplete for `Item`, `Session`, `CheckoutItem`, `Configuration`, `HelperMethods`
+- Autocomplete for `Item`, `Session`, `CheckoutItem`, `Configuration`, `Constants`, `HelperMethods`
 - Type information on hover
 - Parameter hints for methods
 - Documentation from JSDoc comments
+- Errors for calls that do not exist at runtime, and for missing null checks (for example on `Item.getFileInfo()`)
 
 ## API Reference
 
@@ -101,18 +110,25 @@ Your IDE will now provide:
 | `Item` | The main product item being priced with all its properties and methods |
 | `Session` | Session-level data including cart items and customer information |
 | `CheckoutItem` | Checkout context with shipping addresses and customer details |
-| `Configuration` | Script configuration and parameters |
+| `Configuration` | Script configuration via `Configuration.ScriptConfig()` |
+| `Constants` | Constants such as `Constants.MessageArea` |
 | `HelperMethods` | Utility functions for pricing calculations |
 
 ### Output Functions
 
 | Function | Description |
 |----------|-------------|
-| `debug(message)` | Debug messages (admin testing only) |
-| `alert(message)` | Information messages shown to users |
-| `warning(message)` | Warning messages shown to users |
-| `error(message)` | Error messages shown to users |
-| `console(message)` | Console logging for debugging |
+| `debug(message, location?)` | Debug messages (admin testing only) |
+| `alert(message, location?)` | Information messages shown to users |
+| `warning(message, location?)` | Warning messages shown to users |
+| `error(message, location?)` | Error messages shown to users |
+| `console(message, location?)` | Console logging for debugging |
+
+The optional `location` chooses where the message is shown. Use a `Constants.MessageArea` value: `All` (default), `ProductDetails`, `PostEditor`, `Basket`, `AdminArea` or `ProductDetailsAndPostEditor`.
+
+```javascript
+alert("Bulk discount applied", Constants.MessageArea.Basket);
+```
 
 ### Global Functions
 
@@ -141,6 +157,9 @@ Your IDE will now provide:
 | Property | Type | Description |
 |----------|------|-------------|
 | `ProductName` | `string` | Display name |
+| `ProductId` | `number` | Product ID |
+| `ProductGroupName` | `string \| null` | Product group name |
+| `Specifications` | `Specification[]` | Specification attributes (Key, Value, DefaultValue) |
 | `Sku` | `string` | Product SKU |
 | `ActualSku` | `string` | SKU including combinations |
 | `Categories` | `string[]` | Product categories |
@@ -155,6 +174,14 @@ Your IDE will now provide:
 | `IsBatch` | `boolean` | Batch job indicator |
 | `NumberOfPages` | `number` | Pages in document |
 | `NumberOfRecords` | `number` | Records count |
+| `JobId` | `string \| null` | ID of the job behind the item |
+| `CanSetJobProperties` | `boolean` | Whether the item has a job whose properties can be set |
+
+#### Script Context
+| Property | Type | Description |
+|----------|------|-------------|
+| `ScriptContext` | `"Product" \| "CheckoutAttribute" \| "LandingPageWithTierPrices"` | Mode the script is running in |
+| `IsTierPriceMode` | `boolean` | Script is building the product page tier price table |
 
 #### Pricing Tiers
 | Property | Type | Description |
@@ -182,11 +209,20 @@ Your IDE will now provide:
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `getFileInfo(attributeId, readContent?)` | `FileInfo` | Get information about uploaded files |
+| `getFileInfo(attributeId, readContent, getTextFileContent?)` | `FileInfo \| null` | Get information about uploaded files |
 | `getAttributeValue(attributeName)` | `string` | Get attribute value by name |
 | `setAttributeValue(attributeName, value)` | `void` | Set attribute value |
-| `getGlobalFileContent(filename)` | `string[]` | Load global configuration files |
+| `getGlobalFileContent(filename)` | `FileInfo` | Load global configuration files |
 | `getGlobalFileCsvContent(filename)` | `string[][]` | Load CSV data from global files |
+| `getRowsFromLookup(filename, columnNames, columnValues)` | `string[][] \| null` | Indexed lookup of matching rows in a global CSV file |
+| `ToJson(obj)` | `string` | Serialize a value to JSON. Known issue: currently returns an error JSON inside pricing scripts; use `HelperMethods.LogObject` instead |
+
+### Session Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `ScriptContext` | `"Product" \| "CheckoutAttribute" \| "LandingPageWithTierPrices"` | Mode the script is running in |
+| `IsTierPriceMode` | `boolean` | Script is building the product page tier price table |
 
 ### Session Methods
 
@@ -194,6 +230,7 @@ Your IDE will now provide:
 |--------|---------|-------------|
 | `getCheckoutAttributeValue(attributeName)` | `string` | Get checkout attribute value by name |
 | `setCheckoutAttributeValue(attributeName, value)` | `void` | Set checkout attribute value on the customer |
+| `ToJson(obj)` | `string` | Serialize a value to JSON. Known issue: currently returns an error JSON inside pricing scripts |
 
 ### Helper Methods
 
@@ -213,10 +250,12 @@ Your IDE will now provide:
 
 ### Basic Pricing
 
-```typescript
+The examples below are full scripts. In an editor, put `// @ts-ignore` above the final `return` as shown in Quick Start.
+
+```javascript
 // Simple price calculation with attribute adjustments
-function calculatePrice(): number {
-    let price = Item.Price;
+function calculatePrice() {
+    var price = Item.Price;
     price += HelperMethods.GetAttributePriceAdjustment(Item.Quantity);
     return price;
 }
@@ -226,10 +265,10 @@ return calculatePrice();
 
 ### Tier-Based Pricing
 
-```typescript
+```javascript
 // Quantity-based tier pricing
-function calculatePrice(): number {
-    const tier = HelperMethods.FindTier(
+function calculatePrice() {
+    var tier = HelperMethods.FindTier(
         Item.Quantity,
         Item.PricingTiers,
         Item.CustomerRoles
@@ -247,10 +286,10 @@ return calculatePrice();
 
 ### Customer Role Pricing
 
-```typescript
+```javascript
 // Different prices for different customer roles
-function calculatePrice(): number {
-    let price = Item.Price;
+function calculatePrice() {
+    var price = Item.Price;
 
     // Check for wholesale customer
     if (HelperMethods.Contains(Item.CustomerRoles, "Wholesale")) {
@@ -272,23 +311,23 @@ return calculatePrice();
 
 ### CSV-Based Pricing
 
-```typescript
+```javascript
 // Look up prices from a CSV file
-function calculatePrice(): number {
-    const csvData = Item.getGlobalFileCsvContent("pricing-matrix.csv");
+function calculatePrice() {
+    var csvData = Item.getGlobalFileCsvContent("pricing-matrix.csv");
 
-    if (!csvData || csvData.length === 0) {
+    if (!csvData || csvData.length == 0) {
         warning("Pricing matrix not found, using default price");
         return Item.Price;
     }
 
     // Find matching row based on attributes
-    const size = Item.getAttributeValue("Size");
-    const material = Item.getAttributeValue("Material");
+    var size = Item.getAttributeValue("Size");
+    var material = Item.getAttributeValue("Material");
 
-    for (let i = 1; i < csvData.length; i++) {
-        const row = csvData[i];
-        if (row[0] === size && row[1] === material) {
+    for (var i = 1; i < csvData.length; i++) {
+        var row = csvData[i];
+        if (row[0] == size && row[1] == material) {
             return parseFloat(row[2]); // Price column
         }
     }
@@ -301,33 +340,50 @@ return calculatePrice();
 
 ### File-Based Pricing
 
-```typescript
+```javascript
 // Price based on uploaded file characteristics
-function calculatePrice(): number {
-    let price = Item.Price;
+function calculatePrice() {
+    var price = Item.Price;
 
-    const fileInfo = Item.getFileInfo("artwork", true);
+    for (var i = 0; i < Item.Attributes.length; i++) {
+        var attr = Item.Attributes[i];
+        if (attr.Type != "FileUpload") {
+            continue;
+        }
 
-    if (fileInfo.Error) {
-        return price;
-    }
+        // getFileInfo is keyed by the attribute ID and returns null when nothing was uploaded
+        var fileInfo = Item.getFileInfo(String(attr.Id), false);
+        if (!fileInfo || fileInfo.Error) {
+            continue;
+        }
 
-    // Add per-page fee for PDFs
-    if (fileInfo.MimeType === "application/pdf") {
-        price += fileInfo.NumberOfPages * 0.25;
-        console(`Added $${(fileInfo.NumberOfPages * 0.25).toFixed(2)} for ${fileInfo.NumberOfPages} pages`);
-    }
+        // Add per-page fee for PDFs
+        if (fileInfo.MimeType == "application/pdf") {
+            price += fileInfo.NumberOfPages * 0.25;
+            console("Added $" + (fileInfo.NumberOfPages * 0.25).toFixed(2) + " for " + fileInfo.NumberOfPages + " pages");
+        }
 
-    // Add size-based fee
-    const sizeMB = fileInfo.Size / (1024 * 1024);
-    if (sizeMB > 5) {
-        price += (sizeMB - 5) * 1.00; // $1 per MB over 5MB
+        // Add size-based fee
+        var sizeMB = fileInfo.Size / (1024 * 1024);
+        if (sizeMB > 5) {
+            price += (sizeMB - 5) * 1.00; // $1 per MB over 5MB
+        }
     }
 
     return price;
 }
 
 return calculatePrice();
+```
+
+### Messages in a Specific Area
+
+```javascript
+// Show the note only in the basket, and a debug line only in the admin area
+alert("Bulk discount applied", Constants.MessageArea.Basket);
+debug("Specifications: " + Item.Specifications.length, Constants.MessageArea.AdminArea);
+
+return Item.Price;
 ```
 
 ## Project Structure
@@ -339,11 +395,14 @@ types-for-pricing-script/
 │   │   ├── Item.d.ts            # Main Item interface
 │   │   ├── Attribute.d.ts       # Attribute definitions
 │   │   ├── Tier.d.ts            # Pricing tier definitions
-│   │   └── Version.d.ts         # Version/job management
+│   │   ├── Version.d.ts         # Version/job management
+│   │   └── Specification.d.ts   # Product specification attributes
 │   ├── File/
 │   │   └── FileInfo.d.ts        # File information interface
 │   ├── Configuration/
 │   │   └── Configuration.d.ts   # Script configuration
+│   ├── Constants/
+│   │   └── Constants.d.ts       # Constants.MessageArea
 │   ├── Output/
 │   │   └── Output.d.ts          # Output functions
 │   ├── Helpers/
@@ -356,9 +415,9 @@ types-for-pricing-script/
 │   │   └── CheckoutItem.d.ts    # Checkout interface
 │   └── index.d.ts               # Main entry point
 ├── docs/                         # Documentation site
+├── DocumentationHome.md          # Documentation site home page
 ├── package.json
-├── README.md
-└── QUICKSTART.md
+└── README.md
 ```
 
 ## Development
@@ -371,14 +430,6 @@ npm run docs
 
 # Serve documentation locally
 npm start
-```
-
-### Running Examples
-
-```bash
-cd examples
-npm install
-npm run build
 ```
 
 ## Supported File Types
@@ -398,20 +449,23 @@ The FileInfo interface supports these file types:
 ### Script Not Returning Value
 Ensure your script returns a number. If an exception occurs, the system falls back to the normal price.
 
-```typescript
+```javascript
 // Always return a number
 return calculatePrice();
 ```
 
 ### IntelliSense Not Working
 1. Ensure the package is installed: `npm i -D @infigo-official/types-for-pricing-script`
-2. Restart your IDE
-3. Check that `tsconfig.json` is configured correctly
+2. Check that `tsconfig.json` lists the package under `compilerOptions.types` (see Quick Start)
+3. Restart your IDE
+
+### "A 'return' statement can only be used within a function body"
+Pricing scripts return the price from the top level. Put `// @ts-ignore` on the line above that `return`.
 
 ### Type Errors
 The types are read-only where appropriate. Use the provided methods to modify values:
 
-```typescript
+```javascript
 // Wrong - Item.Price is read-only for assignment
 // Item.Price = 100;
 
@@ -423,6 +477,17 @@ Item.setAttributeValue("custom_field", "value");
 ```
 
 ## Changelog
+
+### v1.0.9
+- Added Item `ProductId`, `ProductGroupName`, `JobId`, `CanSetJobProperties`, `Specifications`, `getRowsFromLookup`, `ToJson` and the three-argument `getFileInfo`
+- Added Session `ScriptContext`, `IsTierPriceMode` and `ToJson` (`ToJson` currently fails inside the script sandbox; see its docs)
+- Documented that platform values must be compared with `==` (not `===`) and that `Session` is undefined under the admin Test button
+- Added `Constants.MessageArea` and the optional `location` argument of the output functions
+- Added global `setTierPrice` and `parseCsv`, and Session `getCheckoutAttributeValue` / `setCheckoutAttributeValue` (first npm release containing them)
+- Removed `Configuration.Parameters()` and the `ConfigurationInterface` type, which do not exist at runtime
+- `Item.getFileInfo()` now returns `FileInfo | null`, matching the runtime; with `strictNullChecks`, add a null check before reading its properties
+- Output functions now accept any value as the message, not only strings
+- Fixed the File-Based Pricing example to use `Item.getFileInfo()`
 
 ### v1.0.3
 - Updated documentation
