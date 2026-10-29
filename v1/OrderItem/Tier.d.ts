@@ -52,7 +52,7 @@ declare interface Tier {
      * specified role, allowing for role-based pricing strategies.
      * 
      * @example
-     * if (tier.CustomerRole === "" || Customer.CustomerRoles.includes(tier.CustomerRole)) {
+     * if (tier.CustomerRole === "" || Item.CustomerRoles.indexOf(tier.CustomerRole) >= 0) {
      *     return tier.Price; // Tier applies to this customer
      * }
      */

@@ -44,13 +44,37 @@ Helper methods provide utility functions for common pricing calculations and dat
   - **IsObject/IsArray**: Type checking utilities for robust script development
   - **MergeObject**: Deep merge objects with conflict resolution for combining pricing data
 
+### Session and Checkout
 
+- **Session**: The customer's session (email, roles, department, cart items) and the checkout attribute methods `getCheckoutAttributeValue` / `setCheckoutAttributeValue`. Available in product and checkout attribute scripts.
+- **CheckoutItem**: The checkout context, with the customer, address and items, for scripts attached to checkout attributes.
+
+## Writing Scripts in an Editor
+
+Scripts run on an ES5 JavaScript engine. Write plain ES5 (`var`, `function`, `indexOf`); `let`, `const`, arrow functions, template literals, `includes` and `startsWith` fail at runtime. To get IntelliSense and type checking in your editor, install the package and use this `tsconfig.json`; the `.js` files can then be pasted into the admin script editor unchanged:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "lib": ["ES5"],
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "types": ["@infigo-official/types-for-pricing-script"]
+  },
+  "include": ["src/**/*"]
+}
+```
+
+Scripts return the price from the top level, which TypeScript reports as an error. Put `// @ts-ignore` on the line above that `return`.
 
 ## Scripting Principles
 
 ### Object Access and Data Flow
 
-When working with pricing script objects, all data is read-only and accessed through the provided interfaces. The script receives the current state of the pricing context and returns the calculated price or pricing adjustments.
+When working with pricing script objects, data is read-only and accessed through the provided interfaces; the exceptions are `Item.setAttributeValue`, `Session.setCheckoutAttributeValue` and `setTierPrice`. The script receives the current state of the pricing context and returns the calculated price or pricing adjustments.
 
 Updates to the pricing system are handled through the return value of the script, which can include price modifications, attribute adjustments, and other pricing-related changes.
 
@@ -188,12 +212,12 @@ Using built-in tier pricing with HelperMethods:
 ```javascript
 // Define pricing tiers
 var tiers = [
-    { Quantity: 1, Price: 5.00 },
-    { Quantity: 50, Price: 4.00 },
-    { Quantity: 100, Price: 3.50 },
-    { Quantity: 250, Price: 3.00 },
-    { Quantity: 500, Price: 2.50 },
-    { Quantity: 1000, Price: 2.00 }
+    { Quantity: 1, Price: 5.00, CustomerRole: "" },
+    { Quantity: 50, Price: 4.00, CustomerRole: "" },
+    { Quantity: 100, Price: 3.50, CustomerRole: "" },
+    { Quantity: 250, Price: 3.00, CustomerRole: "" },
+    { Quantity: 500, Price: 2.50, CustomerRole: "" },
+    { Quantity: 1000, Price: 2.00, CustomerRole: "" }
 ];
 
 // Find the appropriate tier for the current quantity
@@ -212,10 +236,10 @@ Interpolated pricing for smooth transitions:
 
 ```javascript
 var tiers = [
-    { Quantity: 1, Price: 10.00 },
-    { Quantity: 100, Price: 8.00 },
-    { Quantity: 500, Price: 6.00 },
-    { Quantity: 1000, Price: 4.00 }
+    { Quantity: 1, Price: 10.00, CustomerRole: "" },
+    { Quantity: 100, Price: 8.00, CustomerRole: "" },
+    { Quantity: 500, Price: 6.00, CustomerRole: "" },
+    { Quantity: 1000, Price: 4.00, CustomerRole: "" }
 ];
 
 // Get interpolated price between tiers
@@ -258,11 +282,11 @@ Role-based tier pricing:
 ```javascript
 // Define tiers with customer role support
 var tiers = [
-    { Quantity: 1, Price: 10.00 },
+    { Quantity: 1, Price: 10.00, CustomerRole: "" },
     { Quantity: 50, Price: 8.00, CustomerRole: "Registered" },
     { Quantity: 50, Price: 7.00, CustomerRole: "Wholesale" },
     { Quantity: 50, Price: 6.00, CustomerRole: "VIP" },
-    { Quantity: 100, Price: 6.00 },
+    { Quantity: 100, Price: 6.00, CustomerRole: "" },
     { Quantity: 100, Price: 5.00, CustomerRole: "Wholesale" },
     { Quantity: 100, Price: 4.00, CustomerRole: "VIP" }
 ];
@@ -473,15 +497,17 @@ Manual attribute iteration:
 var basePrice = Item.Price;
 var adjustments = 0;
 
-// Iterate through all attributes
+// Item.Attributes holds one entry per selected value
 for (var i = 0; i < Item.Attributes.length; i++) {
     var attr = Item.Attributes[i];
 
-    // Check if attribute has a selected value
-    if (attr.SelectedValue) {
-        adjustments += attr.SelectedValue.PriceAdjustment || 0;
-        debug(attr.Name + ": " + attr.SelectedValue.Name +
-              " (+$" + (attr.SelectedValue.PriceAdjustment || 0) + ")");
+    // Text and file attributes have no options (empty Values) and no price adjustment
+    if (attr.Values.length > 0) {
+        var adjustment = attr.PriceAdjustmentIsPercentage
+            ? basePrice * attr.PriceAdjustment / 100
+            : attr.PriceAdjustment;
+        adjustments += adjustment;
+        debug(attr.Key + ": " + attr.Value + " (+$" + adjustment + ")");
     }
 }
 

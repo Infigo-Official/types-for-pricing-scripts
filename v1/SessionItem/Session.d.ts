@@ -53,7 +53,7 @@ declare interface Session {
      * 
      * @example
      * console("Session customer email: " + Session.Email);
-     * if (Session.Email.endsWith(".edu")) {
+     * if (/\.edu$/i.test(Session.Email)) {
      *     console("Educational customer detected");
      * }
      */
@@ -66,7 +66,7 @@ declare interface Session {
      * 
      * @example
      * console("Customer roles: " + Session.CustomerRoles.join(", "));
-     * if (Session.CustomerRoles.includes("VIP")) {
+     * if (Session.CustomerRoles.indexOf("VIP") >= 0) {
      *     console("VIP customer - apply special pricing");
      * }
      */
@@ -118,7 +118,7 @@ declare interface Session {
      *     debug("Pricing a checkout attribute");
      * }
      */
-    ScriptContext: string;
+    ScriptContext: "Product" | "CheckoutAttribute" | "LandingPageWithTierPrices";
 
     /**
      * True when the script is run to build the product page tier price table
@@ -179,7 +179,7 @@ declare interface Session {
      * @param value - Value to set
      *
      * @example
-     * if (Session.CustomerRoles.includes("Wholesale")) {
+     * if (Session.CustomerRoles.indexOf("Wholesale") >= 0) {
      *     Session.setCheckoutAttributeValue("Delivery Type", "Pallet");
      * }
      *
@@ -216,7 +216,7 @@ declare interface Session {
  * }
  * 
  * // Apply role-based session pricing
- * if (Session.CustomerRoles.includes("Wholesale")) {
+ * if (Session.CustomerRoles.indexOf("Wholesale") >= 0) {
  *     console("Wholesale customer session - apply wholesale pricing");
  * }
  * 
@@ -226,7 +226,7 @@ declare interface Session {
  * }
  * 
  * // Customer email-based logic
- * if (Session.Email.includes("@company.com")) {
+ * if (Session.Email.indexOf("@company.com") >= 0) {
  *     console("Internal company customer - apply employee pricing");
  * }
  */

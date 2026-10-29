@@ -38,7 +38,7 @@ declare interface CheckoutCustomer {
      * 
      * @example
      * console("Customer email: " + CheckoutItem.Customer.Email);
-     * if (CheckoutItem.Customer.Email.endsWith(".edu")) {
+     * if (/\.edu$/i.test(CheckoutItem.Customer.Email)) {
      *     console("Educational customer - apply academic pricing");
      * }
      */
@@ -50,7 +50,7 @@ declare interface CheckoutCustomer {
      * 
      * @example
      * console("Customer roles: " + CheckoutItem.Customer.Roles.join(", "));
-     * if (CheckoutItem.Customer.Roles.includes("VIP")) {
+     * if (CheckoutItem.Customer.Roles.indexOf("VIP") >= 0) {
      *     console("VIP customer checkout");
      * }
      */
@@ -348,7 +348,7 @@ declare interface CheckoutItem {
  * }
  * 
  * // Customer role-based checkout pricing
- * if (CheckoutItem.Customer.Roles.includes("Premium")) {
+ * if (CheckoutItem.Customer.Roles.indexOf("Premium") >= 0) {
  *     console("Premium customer checkout - free shipping");
  * }
  * 

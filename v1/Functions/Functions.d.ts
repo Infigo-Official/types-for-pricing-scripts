@@ -29,7 +29,7 @@
  *     // skip the header row
  *     for (var i = 1; i < rows.length; i++) {
  *         if (rows[i][0] === Item.getAttributeValue("Size")) {
- *             return rows[i][1] * Item.Quantity;
+ *             return Number(rows[i][1]) * Item.Quantity;
  *         }
  *     }
  * }

@@ -176,7 +176,7 @@ declare interface Item {
      *
      * @example
      * // Apply SKU-specific pricing rules
-     * if (Item.Sku.startsWith("PREMIUM-")) {
+     * if (Item.Sku.indexOf("PREMIUM-") === 0) {
      *     debug("Premium product: " + Item.Sku);
      *     return Item.Price * 1.10; // 10% premium markup
      * }
@@ -278,7 +278,7 @@ declare interface Item {
      * category-specific pricing rules.
      * 
      * @example
-     * if (Item.Categories.includes("Premium")) {
+     * if (Item.Categories.indexOf("Premium") >= 0) {
      *     return Item.Price * 1.1; // 10% premium markup
      * }
      */
@@ -290,7 +290,7 @@ declare interface Item {
      * and tag-based pricing rules.
      * 
      * @example
-     * if (Item.Tags.includes("Featured")) {
+     * if (Item.Tags.indexOf("Featured") >= 0) {
      *     return Item.Price * 1.05; // 5% featured product markup
      * }
      */
@@ -452,7 +452,7 @@ declare interface Item {
      *
      * @example
      * // Apply corporate discount for company emails
-     * if (Item.Email.endsWith("@mycompany.com")) {
+     * if (/@mycompany\.com$/i.test(Item.Email)) {
      *     debug("Corporate customer: " + Item.Email);
      *     return Item.Price * 0.85; // 15% corporate discount
      * }
@@ -638,7 +638,7 @@ declare interface Item {
      *     debug("Pricing a checkout attribute");
      * }
      */
-    ScriptContext: string;
+    ScriptContext: "Product" | "CheckoutAttribute" | "LandingPageWithTierPrices";
 
     /**
      * True when the script is run to build the product page tier price table
@@ -906,17 +906,11 @@ declare interface Item {
  * }
  * 
  * @example
- * // Working with product versions and configurations
- * if (Item.Versions && Item.Versions.length > 0) {
+ * // Working with job versions
+ * if (Item.IsVersion && Item.Versions.length > 0) {
  *     for (var v = 0; v < Item.Versions.length; v++) {
  *         var version = Item.Versions[v];
- *         console("Version " + (v + 1) + ": " + version.Data.length + " data entries");
- *         
- *         // Process version-specific data
- *         for (var d = 0; d < version.Data.length; d++) {
- *             var data = version.Data[d];
- *             console("  Data entry: " + data.Key + " = " + data.Value);
- *         }
+ *         console("Version " + (v + 1) + ": " + version.CustomName + " x " + version.Quantity);
  *     }
  * }
  *

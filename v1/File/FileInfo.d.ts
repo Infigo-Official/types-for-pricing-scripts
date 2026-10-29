@@ -62,7 +62,7 @@ declare interface FileInfo {
      * @example
      * if (fileInfo.MimeType === "application/pdf") {
      *     return Item.Price + (fileInfo.NumberOfPages * 0.50); // $0.50 per page
-     * } else if (fileInfo.MimeType.startsWith("image/")) {
+     * } else if (fileInfo.MimeType.indexOf("image/") === 0) {
      *     return Item.Price + 2.00; // $2.00 for image files
      * }
      */
