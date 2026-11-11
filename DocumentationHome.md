@@ -2,6 +2,51 @@
 
 Documentation for the entire Pricing Script engine. Type declarations can be found in the [NPM package](https://www.npmjs.com/package/@infigo-official/types-for-pricing-script) and can be used for your TypeScript and JavaScript projects to get full IntelliSense support.
 
+## Script Contexts and Base Objects
+
+The same scripting engine runs in three pricing contexts. Each context exposes a different **base object** — the global object that describes what is being priced. Only the objects listed for a context exist at runtime; referencing any other (for example `Item` inside a shipping script) makes the script fail with an error.
+
+| Context | Where it runs | Base object | Also available | Not available | Return value |
+|---------|---------------|-------------|----------------|---------------|--------------|
+| **Get price** (product pricing script) | Product variant price — product page, cart, checkout and order recalculation | `Item` | `Session` (when the customer is known) | `CheckoutItem` | The product price |
+| **Get shipping options** (Custom Script shipping method) | Shipping rate calculation, once per configured shipping option | `CheckoutItem` | — | `Item`, `Session` | The shipping rate for the option; no value means the option is not offered |
+| **Checkout attribute pricing** | Price adjustment of a checkout attribute that has a pricing script | `Session` | — | `Item`, `CheckoutItem` | The checkout attribute price adjustment |
+
+The output functions (`debug`, `alert`, `warning`, `error`, `console`), the global functions (`parseCsv`, `setTierPrice`) and `HelperMethods` are available in every context.
+
+### Get price — `Item`
+
+`Item` is the product variant being priced, with its attributes, quantity, tiers and customer data. `Session` gives access to the rest of the customer's cart.
+
+```javascript
+var price = Item.Price;
+if (Session.CartItems.length > 5) {
+    price *= 0.95;
+}
+return price;
+```
+
+### Get shipping options — `CheckoutItem`
+
+`CheckoutItem` is the whole checkout: every item being shipped (`CheckoutItem.Items`), the customer, the shipping address, the origin and the shipping option being priced (`CheckoutItem.Mode`). Item-level data is read from `CheckoutItem.Items`, not from `Item`.
+
+```javascript
+var weight = 0;
+for (var i = 0; i < CheckoutItem.Items.length; i++) {
+    weight += CheckoutItem.Items[i].Weight * CheckoutItem.Items[i].Quantity;
+}
+return 5.00 + weight * 0.50;
+```
+
+### Checkout attribute pricing — `Session`
+
+`Session` is the customer and their cart. The cart contents are read from `Session.CartItems`, and other checkout attribute values from `Session.getCheckoutAttributeValue`.
+
+```javascript
+var deliveryType = Session.getCheckoutAttributeValue("Delivery Type");
+return deliveryType === "Express" ? 15.00 : 0;
+```
+
 ## Pricing Script Components
 
 ### Item Management
@@ -465,10 +510,13 @@ return (basePrice + adjustments) * Item.Quantity;
 
 ### Checkout-Level Pricing
 
-Apply pricing based on checkout/shipping information:
+Shipping rate based on checkout/shipping information (Get shipping options context — `CheckoutItem` is the base object, `Item` is not available):
 
 ```javascript
-var basePrice = Item.Price * Item.Quantity;
+var basePrice = 0;
+for (var i = 0; i < CheckoutItem.Items.length; i++) {
+    basePrice += 2.00 * CheckoutItem.Items[i].Quantity;
+}
 var shippingSurcharge = 0;
 
 // Check shipping destination country

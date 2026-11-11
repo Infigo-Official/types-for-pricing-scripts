@@ -17,6 +17,12 @@
  * This object provides session-wide context for pricing calculations that
  * may need to consider multiple items or customer session data.
  *
+ * **Available in:**
+ * - Checkout attribute pricing scripts, where it is the base object (`Item` and `CheckoutItem` are not available).
+ * - The Get price context (product pricing scripts), alongside `Item`, when the customer is known.
+ *
+ * It is not available in Get shipping options scripts (use `CheckoutItem`).
+ *
  * @category Global Objects
  */
 declare interface Session {
