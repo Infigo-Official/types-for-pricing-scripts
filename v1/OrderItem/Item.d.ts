@@ -21,6 +21,10 @@
  * This object is the primary interface for accessing product data and performing
  * pricing calculations in pricing scripts.
  *
+ * **Available in:** the Get price context (product pricing scripts), where it is the base object.
+ * It is not available in Get shipping options scripts (use `CheckoutItem.Items`) or in
+ * checkout attribute pricing scripts (use `Session.CartItems`).
+ *
  * @category Global Objects
  */
 declare interface Item {

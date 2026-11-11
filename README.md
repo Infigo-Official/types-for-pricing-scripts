@@ -94,15 +94,27 @@ Your IDE will now provide:
 
 ## API Reference
 
+### Script Contexts and Base Objects
+
+Each pricing context exposes a different base object. Objects not listed for a context do not exist at runtime.
+
+| Context | Base object | Also available | Not available | Return value |
+|---------|-------------|----------------|---------------|--------------|
+| Get price (product pricing script) | `Item` | `Session` (when the customer is known) | `CheckoutItem` | The product price |
+| Get shipping options (Custom Script shipping method) | `CheckoutItem` | — | `Item`, `Session` | The shipping rate for the option; no value means the option is not offered |
+| Checkout attribute pricing | `Session` | — | `Item`, `CheckoutItem` | The checkout attribute price adjustment |
+
+Output functions, global functions and `HelperMethods` are available in every context.
+
 ### Global Objects
 
-| Object | Description |
-|--------|-------------|
-| `Item` | The main product item being priced with all its properties and methods |
-| `Session` | Session-level data including cart items and customer information |
-| `CheckoutItem` | Checkout context with shipping addresses and customer details |
-| `Configuration` | Script configuration and parameters |
-| `HelperMethods` | Utility functions for pricing calculations |
+| Object | Available in | Description |
+|--------|--------------|-------------|
+| `Item` | Get price | The main product item being priced with all its properties and methods |
+| `Session` | Checkout attribute pricing (base object), Get price | Session-level data including cart items and customer information |
+| `CheckoutItem` | Get shipping options | Checkout context with all items, shipping address and customer details |
+| `Configuration` | All | Script configuration and parameters |
+| `HelperMethods` | All | Utility functions for pricing calculations |
 
 ### Output Functions
 

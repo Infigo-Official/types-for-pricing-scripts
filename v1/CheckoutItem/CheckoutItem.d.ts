@@ -217,6 +217,11 @@ declare interface CheckoutAddress {
  * This object provides complete checkout context for pricing calculations that
  * need to consider shipping, customer information, and multi-item scenarios.
  *
+ * **Available in:** the Get shipping options context (Custom Script shipping method), where it is the
+ * base object and is evaluated once per configured shipping option (see `Mode`). `Item` and `Session`
+ * are not available there; read item data from `CheckoutItem.Items`.
+ * It is not available in Get price or checkout attribute pricing scripts.
+ *
  * @category Global Objects
  */
 declare interface CheckoutItem {
