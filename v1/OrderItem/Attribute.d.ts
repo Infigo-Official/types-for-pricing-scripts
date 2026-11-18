@@ -214,13 +214,12 @@ declare interface Attribute {
     PriceAdjustmentIsPercentage: boolean;
 
     /**
-     * The type or category of this attribute.
-     * This defines the kind of attribute (e.g., "color", "size", "material")
-     * and may affect how the attribute is displayed or processed.
-     * 
+     * The control type of this attribute, such as "DropdownList", "RadioList", "Checkboxes",
+     * "TextBox", "MultilineTextbox", "Datepicker" or "FileUpload".
+     *
      * @example
-     * if (attr.Type === "color") {
-     *     // Handle color-specific logic
+     * if (attr.Type == "FileUpload") {
+     *     var file = Item.getFileInfo(String(attr.Id), false);
      * }
      */
     Type: string;
@@ -242,7 +241,7 @@ declare interface Attribute {
      * @example
      * for (var i = 0; i < attr.Values.length; i++) {
      *     var option = attr.Values[i];
-     *     console.log(option.Value + ": $" + option.PriceAdjustment);
+     *     console(option.Value + ": $" + option.PriceAdjustment);
      * }
      */
     Values: AttributeValue[];

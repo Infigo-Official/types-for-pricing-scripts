@@ -28,8 +28,8 @@
  * if (rows) {
  *     // skip the header row
  *     for (var i = 1; i < rows.length; i++) {
- *         if (rows[i][0] === Item.getAttributeValue("Size")) {
- *             return rows[i][1] * Item.Quantity;
+ *         if (rows[i][0] == Item.getAttributeValue("Size")) {
+ *             return Number(rows[i][1]) * Item.Quantity;
  *         }
  *     }
  * }
@@ -56,7 +56,7 @@ declare function parseCsv(csv: string, hasHeaders?: boolean, delimiter?: string,
  *
  * @example
  * if (Item.IsTierPriceMode) {
- *     var surcharge = Item.getAttributeValue("Finish") === "Gloss" ? 0.10 : 0;
+ *     var surcharge = Item.getAttributeValue("Finish") == "Gloss" ? 0.10 : 0;
  *     for (var i = 0; i < Item.PricingTiers.length; i++) {
  *         var tier = Item.PricingTiers[i];
  *         setTierPrice(tier.Quantity, tier.Price + surcharge);

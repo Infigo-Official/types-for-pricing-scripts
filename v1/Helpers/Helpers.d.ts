@@ -111,12 +111,16 @@ declare interface HelperMethods {
      * and customer roles, supporting both regular pricing tiers and batch tiers
      * 
      * @param quantity - The quantity which you would like the price to be worked out based on
-     * @param tiers - An array of object literals [{Quantity: n, Price: n, CustomerRole?: string}]
-     * @param roles - Array of string that contains customer roles, falls back to Customer.Roles if not supplied
+     * @param tiers - An array of object literals [{Quantity: n, Price: n, CustomerRole: string}]; every tier needs
+     * CustomerRole, with "" for a tier that applies to all roles, or FindTier throws
+     * @param roles - Array of string that contains customer roles, falls back to Item.CustomerRoles if not supplied
      * @returns Tier object or null if no matching tier found
-     * 
+     *
      * @example
-     * var tiers = [{Quantity: 1, Price: 5}, {Quantity: 50, Price: 17}, {Quantity: 250, Price: 60}];
+     * var tiers = [
+     *   {Quantity: 1, Price: 5, CustomerRole: ""}, {Quantity: 50, Price: 17, CustomerRole: ""},
+     *   {Quantity: 250, Price: 60, CustomerRole: ""}
+     * ];
      * var tier = HelperMethods.FindTier(100, tiers, ["SuperAdmin", "Admin"]);
      * // Returns the tier with Quantity: 50, Price: 17
      */
@@ -128,7 +132,7 @@ declare interface HelperMethods {
      * tier-based pricing adjustments that can vary based on quantity or customer roles
      * 
      * @param quantity - The quantity which you would like the price to be worked out based on
-     * @param roles - Array of string that contains customer roles, falls back to Customer.Roles if not supplied
+     * @param roles - Array of string that contains customer roles, falls back to Item.CustomerRoles if not supplied
      * @returns Total price adjustment including all attribute and tier adjustments
      * 
      * @example
@@ -148,9 +152,9 @@ declare interface HelperMethods {
      * 
      * @example
      * var interpolationTiers = [
-     *   {Quantity: 1, Price: 5}, {Quantity: 50, Price: 17}, 
-     *   {Quantity: 250, Price: 60}, {Quantity: 500, Price: 100}, 
-     *   {Quantity: 1000, Price: 200}
+     *   {Quantity: 1, Price: 5, CustomerRole: ""}, {Quantity: 50, Price: 17, CustomerRole: ""},
+     *   {Quantity: 250, Price: 60, CustomerRole: ""}, {Quantity: 500, Price: 100, CustomerRole: ""},
+     *   {Quantity: 1000, Price: 200, CustomerRole: ""}
      * ];
      * var tierPrice = HelperMethods.InterpolatePrice(Item.Quantity, interpolationTiers);
      * // Returns interpolated price based on Item.Quantity position within tiers

@@ -26,7 +26,7 @@ declare interface ItemVersion {
      * 
      * @example
      * var versionJobId = version.JobId;
-     * console.log("Processing version with job ID: " + versionJobId);
+     * console("Processing version with job ID: " + versionJobId);
      */
     JobId: string;
 
@@ -38,7 +38,7 @@ declare interface ItemVersion {
      * 
      * @example
      * var versionName = version.CustomName;
-     * if (versionName.includes("Final")) {
+     * if (versionName.indexOf("Final") >= 0) {
      *     return Item.Price * 1.1; // 10% markup for final versions
      * }
      */
